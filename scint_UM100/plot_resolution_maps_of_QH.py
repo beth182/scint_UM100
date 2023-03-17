@@ -48,7 +48,7 @@ for file_path in target_files:
     # read data
     nc_file = nc.Dataset(file_path)
 
-    QH = nc_file.variables['surface_upward_sensible_heat_flux']
+    QH = nc_file.variables[variable_name]
 
     lat = nc_file['grid_latitude']
 
