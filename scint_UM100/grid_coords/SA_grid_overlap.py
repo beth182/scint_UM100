@@ -18,7 +18,8 @@ sa_dir = 'D:/Documents/scint_UM100/scint_UM100/SA_134/'
 # ToDo: make this flexable
 # one do do with temp grids
 # sa_file = 'BTT_BCT_15000_2016_134_08_00.tif'
-sa_file = 'BCT_IMU_15000_2016_134_12_00.tif'
+# sa_file = 'BCT_IMU_15000_2016_134_12_00.tif'
+sa_file = 'BCT_IMU_15000_2016_134_11_00.tif'
 
 raster_path = sa_dir + sa_file
 
@@ -53,7 +54,8 @@ grid_vals = {}
 
 # for i in range(3670, 3680):
 # for i in range(1, len(grid_file_list) + 1):
-for i in range(3670, len(grid_file_list) + 1):
+# for i in range(16321, 18241):
+for i in range(16321, 17321):
 
     print(i)
 
@@ -115,8 +117,27 @@ for grid in sorted(grid_vals):
 calculated_sum = np.nansum(calculated_sum_list)
 
 df = pd.Series(grid_vals, index=grid_vals.keys())
+df = df.dropna()
+df_data = df.iloc[np.where(df >0)[0]]
+
+df_data.name = sa_file.split('.')[0].split('_')[-2]
 
 # pylab.savefig(save_path + 'raster_grids_' + time_string + '.png', bbox_inches='tight')
+
+# start a csv if there isn't one already
+# df_data.to_csv('D:/Documents/scint_UM100/scint_UM100/grid_coords/test.csv', header=[sa_file.split('.')[0].split('_')[-2]])
+
+# read existing csv
+existing_df = pd.read_csv('D:/Documents/scint_UM100/scint_UM100/grid_coords/test.csv')
+existing_df.index = existing_df['Unnamed: 0']
+existing_df = existing_df.drop(columns=['Unnamed: 0'])
+existing_df.index.name = 'grid'
+
+
+all_df = pd.concat([df_data, existing_df], axis=1)
+all_df = all_df.fillna(0)
+
+all_df.to_csv('D:/Documents/scint_UM100/scint_UM100/grid_coords/test.csv')
 
 # plt.close('all')
 
