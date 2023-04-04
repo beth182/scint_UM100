@@ -51,7 +51,9 @@ grid_file_list = glob.glob(gpkg_dir_path + '*.gpkg')
 # makes list to see total value outside loop
 grid_vals = {}
 
-for i in range(1, len(grid_file_list) + 1):
+# for i in range(3670, 3680):
+# for i in range(1, len(grid_file_list) + 1):
+for i in range(3670, len(grid_file_list) + 1):
 
     print(i)
 
@@ -97,8 +99,9 @@ for i in range(1, len(grid_file_list) + 1):
         summed_val = np.nansum(masked)
         # as a percentage of the total raster, and rounded to 4 sig fig.
         grid_sum = round((summed_val / total_SA_sum) * 100, 4)
+        print(grid_sum)
 
-    except ValueError:
+    except:
         # traceback.print_exc()
         grid_sum = np.nan
 
