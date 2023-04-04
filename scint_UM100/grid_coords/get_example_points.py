@@ -53,8 +53,12 @@ rot_pole = cube.coord('grid_latitude').coord_system.as_cartopy_crs()
 ll = ccrs.Geodetic()
 
 # random coord in London - by IMU
-y_coord = 51.5260849
-x_coord = 359.89498901
+# y_coord = 51.5260849
+# x_coord = 359.89498901
+
+# BTT coord
+y_coord = 51.5214542
+x_coord = 360 - 0.138843
 
 target_xy = rot_pole.transform_point(x_coord, y_coord, ll)  # lower left corner
 
@@ -122,6 +126,7 @@ y_list = [p11[1], p22[1], p00[1], p10[1], p20[1], p01[1], p21[1], p02[1], p12[1]
 df = pd.DataFrame.from_dict({'name': point_list, 'x': x_list, 'y': y_list})
 df = df.set_index('name')
 
-df.to_csv(save_path + 'rotation_tests.csv')
+# df.to_csv(save_path + 'rotation_tests.csv')
+df.to_csv(save_path + 'rotation_tests_BTT.csv')
 
 print('end')
