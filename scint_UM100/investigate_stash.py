@@ -23,9 +23,13 @@ model = '100m'
 run = '20160512T1200Z'
 
 # QH on the hour
-target_filetype = 'pvera'
+# target_filetype = 'pvera'
+target_filetype = 'pexptb'
 
-variable_name = 'surface_upward_sensible_heat_flux'
+# variable_name = 'surface_upward_sensible_heat_flux'
+# variable_name = 'upward_air_velocity'
+# variable_name = 'air_temperature'
+variable_name = 'upward_heat_flux_in_air'
 
 colour_dict = {'BCT_IMU': 'red', 'SCT_SWT': 'mediumorchid', 'IMU_BTT': 'green', 'BTT_BCT': 'blue'}
 
