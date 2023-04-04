@@ -4,25 +4,23 @@ import geopandas  # the GEOS-based vector package
 import matplotlib.pyplot as plt  # the visualization package
 import numpy as np
 from rasterio.mask import mask
-import pylab
 import matplotlib as mpl
+import glob
 import pandas as pd
-from os import listdir
-from os.path import isfile, join
 
 import warnings
+
 warnings.filterwarnings("ignore")
 
 # SA location
 sa_dir = 'D:/Documents/scint_UM100/scint_UM100/SA_134/'
 
 # ToDo: make this flexable
+# one do do with temp grids
+# sa_file = 'BTT_BCT_15000_2016_134_08_00.tif'
 sa_file = 'BCT_IMU_15000_2016_134_12_00.tif'
 
-
 raster_path = sa_dir + sa_file
-
-
 
 raster = rasterio.open(raster_path)
 SA_data = raster.read(1)
@@ -31,6 +29,9 @@ SA_data = raster.read(1)
 total_SA_sum = np.nansum(SA_data)
 
 raster_extent = numpy.asarray(raster.bounds)[[0, 2, 1, 3]]
+
+# temp reduced grids
+# gpkg_dir_path = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/UM100_shapes_reduced/'
 
 gpkg_dir_path = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/UM100_shapes/'
 
@@ -42,11 +43,10 @@ cmap = mpl.cm.jet
 cmap.set_bad('white', 1.)
 plt.imshow(SA_data, interpolation='none', cmap=cmap, extent=raster_extent)
 
-
-grid_file_list = [f for f in listdir(gpkg_dir_path) if isfile(join(gpkg_dir_path, f))]
+grid_file_list = glob.glob(gpkg_dir_path + '*.gpkg')
 
 # make sure there is no QGIS nonsense with len files
-assert len(grid_file_list) == 25600
+# assert len(grid_file_list) == 25600
 
 # makes list to see total value outside loop
 grid_vals = {}
@@ -103,5 +103,19 @@ for i in range(1, len(grid_file_list) + 1):
         grid_sum = np.nan
 
     grid_vals[i] = grid_sum
+
+calculated_sum_list = []
+for grid in sorted(grid_vals):
+    calculated_sum_list.append(grid_vals[grid])
+
+# sum calculated by adding the sums of all individual grids
+calculated_sum = np.nansum(calculated_sum_list)
+
+df = pd.Series(grid_vals, index=grid_vals.keys())
+
+# pylab.savefig(save_path + 'raster_grids_' + time_string + '.png', bbox_inches='tight')
+
+# plt.close('all')
+
 
 print('end')
