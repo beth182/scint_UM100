@@ -8,9 +8,9 @@ import geopandas as gpd
 from shapely.geometry import Polygon
 
 save_path = os.getcwd().replace('\\', '/') + '/'
-csv_location = save_path + 'rotation_tests.csv'
+csv_location = save_path + 'rotation_tests_BTT.csv'
 
-step_number = 2
+step_number = 80
 
 df = pd.read_csv(csv_location)
 
@@ -93,8 +93,8 @@ all_df = pd.concat([lon_df, all_row_df])
 
 all_df = all_df.sort_values(['row #', 'col #']).reset_index().drop(columns=['index'])
 
-fig, ax = plt.subplots()
-ax.scatter(all_df.x, all_df.y, c='k')
+# fig, ax = plt.subplots()
+# ax.scatter(all_df.x, all_df.y, c='k')
 
 # isolate squares
 count = 1
@@ -102,17 +102,17 @@ for j in range(0, (step_number * 2)):
     # loop over rows
     for i in range(0, (step_number * 2)):
         # bottom left
-        ax.scatter(all_df[all_df['row #'] == i][all_df['col #'] == j].x,
-                   all_df[all_df['row #'] == i][all_df['col #'] == j].y, c='r')
-        # top left
-        ax.scatter(all_df[all_df['row #'] == i + 1][all_df['col #'] == j].x,
-                   all_df[all_df['row #'] == i + 1][all_df['col #'] == j].y, c='r')
-        # top right
-        ax.scatter(all_df[all_df['row #'] == i + 1][all_df['col #'] == j + 1].x,
-                   all_df[all_df['row #'] == i + 1][all_df['col #'] == j + 1].y, c='r')
-        # bottom right
-        ax.scatter(all_df[all_df['row #'] == i][all_df['col #'] == j + 1].x,
-                   all_df[all_df['row #'] == i][all_df['col #'] == j + 1].y, c='r')
+        # ax.scatter(all_df[all_df['row #'] == i][all_df['col #'] == j].x,
+        #            all_df[all_df['row #'] == i][all_df['col #'] == j].y, c='r')
+        # # top left
+        # ax.scatter(all_df[all_df['row #'] == i + 1][all_df['col #'] == j].x,
+        #            all_df[all_df['row #'] == i + 1][all_df['col #'] == j].y, c='r')
+        # # top right
+        # ax.scatter(all_df[all_df['row #'] == i + 1][all_df['col #'] == j + 1].x,
+        #            all_df[all_df['row #'] == i + 1][all_df['col #'] == j + 1].y, c='r')
+        # # bottom right
+        # ax.scatter(all_df[all_df['row #'] == i][all_df['col #'] == j + 1].x,
+        #            all_df[all_df['row #'] == i][all_df['col #'] == j + 1].y, c='r')
 
         square_df = pd.concat([all_df[all_df['row #'] == i][all_df['col #'] == j],
                                all_df[all_df['row #'] == i + 1][all_df['col #'] == j],
@@ -122,10 +122,11 @@ for j in range(0, (step_number * 2)):
         polygon_geom = Polygon(zip(square_df.x, square_df.y))
         polygon = gpd.GeoDataFrame(index=[0], crs='epsg:32631', geometry=[polygon_geom])
         polygon.to_file(filename=save_path + 'UM100_shapes/' + str(count) + ".gpkg", driver="GPKG")
-        polygon.plot(ax=ax)
+        # polygon.plot(ax=ax)
 
         count += 1
 
-        ax.scatter(all_df.x, all_df.y, c='k')
+        # ax.scatter(all_df.x, all_df.y, c='k')
+
 
 print('end')
