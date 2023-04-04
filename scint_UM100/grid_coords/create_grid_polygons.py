@@ -7,6 +7,9 @@ import os
 import geopandas as gpd
 from shapely.geometry import Polygon
 
+# requires the output from running get_example_points.py to work
+# ToDo: update this
+
 save_path = os.getcwd().replace('\\', '/') + '/'
 csv_location = save_path + 'rotation_tests_BTT.csv'
 
