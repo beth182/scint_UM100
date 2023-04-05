@@ -96,6 +96,7 @@ for file_path in target_files:
     else:
         len_times = QH.shape[0]
 
+    # ToDo: this is a problem line - should be [1:] - to check. First hour could be broken. also need to check all other files for this
     if len(run_times) - len_times == 1:
         run_times = [run_start_time + dt.timedelta(seconds=hr * 3600) for hr in run_len_hours][:-1]
 
