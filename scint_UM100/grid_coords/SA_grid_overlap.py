@@ -1,8 +1,7 @@
 import rasterio  # the GEOS-based raster package
-import numpy  # the array computation library
 import geopandas  # the GEOS-based vector package
 import matplotlib.pyplot as plt  # the visualization package
-import numpy as np
+import numpy as np  # the array computation library
 from rasterio.mask import mask
 import matplotlib as mpl
 import glob
@@ -29,7 +28,7 @@ SA_data = raster.read(1)
 # value of the total values across all of the raster
 total_SA_sum = np.nansum(SA_data)
 
-raster_extent = numpy.asarray(raster.bounds)[[0, 2, 1, 3]]
+raster_extent = np.asarray(raster.bounds)[[0, 2, 1, 3]]
 
 # temp reduced grids
 # gpkg_dir_path = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/UM100_shapes_reduced/'
