@@ -13,8 +13,8 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # SA location
-sa_dir = 'D:/Documents/scint_UM100/scint_UM100/SA_134/'
-grid_dir = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/UM100_shapes/'
+sa_dir = '/scint_UM100/SA_134/'
+grid_dir = '/scint_UM100/grid_coords/grid_coord_lookup/UM100_shapes/'
 
 hour_choice = 12
 

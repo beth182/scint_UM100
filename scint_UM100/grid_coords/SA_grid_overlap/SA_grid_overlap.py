@@ -12,7 +12,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # SA location
-sa_dir = 'D:/Documents/scint_UM100/scint_UM100/SA_134/'
+sa_dir = '/scint_UM100/SA_134/'
 
 # ToDo: make this flexable
 # one do do with temp grids
@@ -33,7 +33,7 @@ raster_extent = np.asarray(raster.bounds)[[0, 2, 1, 3]]
 # temp reduced grids
 # gpkg_dir_path = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/UM100_shapes_reduced/'
 
-gpkg_dir_path = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/UM100_shapes/'
+gpkg_dir_path = '/scint_UM100/grid_coords/grid_coord_lookup/UM100_shapes/'
 
 # plotting all grids against raster data
 f = plt.figure(figsize=(20, 20))
@@ -127,7 +127,7 @@ df_data.name = sa_file.split('.')[0].split('_')[-2]
 # df_data.to_csv('D:/Documents/scint_UM100/scint_UM100/grid_coords/test.csv', header=[sa_file.split('.')[0].split('_')[-2]])
 
 # read existing csv
-existing_df = pd.read_csv('D:/Documents/scint_UM100/scint_UM100/grid_coords/test.csv')
+existing_df = pd.read_csv('/scint_UM100/grid_coords/test.csv')
 existing_df.index = existing_df['Unnamed: 0']
 existing_df = existing_df.drop(columns=['Unnamed: 0'])
 existing_df.index.name = 'grid'
