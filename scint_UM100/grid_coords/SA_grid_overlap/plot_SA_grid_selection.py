@@ -24,7 +24,7 @@ sa_file = 'BCT_IMU_15000_2016_134_' + str(hour_choice) + '_00.tif'
 
 raster_path = sa_dir + sa_file
 
-csv_location = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/test.csv'
+csv_location = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_UM100_grid_percentages.csv'
 
 # read SA
 
