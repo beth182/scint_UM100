@@ -10,9 +10,7 @@ import os
 import geopandas
 
 import warnings
-
 warnings.filterwarnings("ignore")
-
 
 # SA location
 sa_dir = 'D:/Documents/scint_UM100/scint_UM100/SA_134/'
@@ -26,18 +24,7 @@ sa_file = 'BCT_IMU_15000_2016_134_' + str(hour_choice) + '_00.tif'
 
 raster_path = sa_dir + sa_file
 
-
-
-
-
 csv_location = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/test.csv'
-
-
-
-
-
-
-
 
 # read SA
 
@@ -49,18 +36,13 @@ cmap = mpl.cm.jet
 cmap.set_bad('white', 1.)
 plt.imshow(SA_data, interpolation='none', cmap=cmap, extent=raster_extent)
 
-
-
-
 # read existing csv
 existing_df = pd.read_csv(csv_location)
 existing_df.index = existing_df['Unnamed: 0']
 existing_df = existing_df.drop(columns=['Unnamed: 0'])
 existing_df.index.name = 'grid'
 
-
 hour_grids = existing_df[str(hour_choice)].index.to_list()
-
 
 for grid in hour_grids:
     print(grid)
@@ -72,8 +54,5 @@ for grid in hour_grids:
     # plot grid
     grid_gpkg = geopandas.read_file(grid_file_path)
     grid_gpkg.boundary.plot(ax=plt.gca(), color='skyblue')
-
-
-
 
 print('end')
