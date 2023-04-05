@@ -35,10 +35,6 @@ colour_dict = {'BCT_IMU': 'red', 'SCT_SWT': 'mediumorchid', 'IMU_BTT': 'green', 
 
 save_path = os.getcwd().replace('\\', '/') + '/'
 
-# source area location on cluster
-sa_base_dir = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/PycharmProjects/scintillometer_footprints/scint_fp/test_outputs/10_mins_ending/'
-scint_shp_dir = 'D:/Documents/scint_plots/scint_plots/sa_position_and_lc_fraction/scint_path_shp/'
-
 # data location
 main_dir = "//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/"
 netcdf_dir = main_dir + 'netcdf/' + run + '/' + model + '/'
@@ -57,8 +53,8 @@ for file in file_list_pp:
         target_files_nc.append(netcdf_dir + file.split('.')[0] + '.nc')
 
 
-target_pp_file = target_files_pp[1]
-target_nc_file = target_files_nc[1]
+target_pp_file = target_files_pp[23]
+target_nc_file = target_files_nc[23]
 
 # load one file into iris first
 # load iris cube from pp file
