@@ -3,6 +3,7 @@ import os
 import netCDF4 as nc
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 import iris
 import cartopy.crs as ccrs
@@ -92,6 +93,7 @@ lat_inds = []
 lon_inds = []
 
 for index, row in target_grid_coords.iterrows():
+    print(index)
 
     # get coord
     x = row.x
@@ -127,6 +129,80 @@ for index, row in target_grid_coords.iterrows():
     real_world_xy = ll.transform_point(lon_value[0], lat_value[0], rot_pole)
     coords = transform(outProj, inProj, real_world_xy[0], real_world_xy[1])
     """
+
+def merge(list1, list2):
+    merged_list = [(list1[i], list2[i]) for i in range(0, len(list1))]
+    return merged_list
+
+assert latitudes.shape[0] == longitudes.shape[0]
+lat_lon_tuples = merge(lat_inds, lon_inds)
+
+var_array = nc_file.variables[variable_name][0,:,:]
+
+# start with an array full of nans
+a = np.full((800,800), np.nan)
+
+# lats
+for i in range (0, 800):
+    # lons
+    for j in range(0, 800):
+        if (i, j) in lat_lon_tuples:
+            a[i, j] = var_array[i,j]
+
+
+
+
+
+
+
+
+import rasterio
+import rasterio.plot
+import geopandas
+
+# plot the data in real world coords
+# from stackoverflow issue: https://stackoverflow.com/questions/62346854/how-to-convert-projection-x-and-y-coordinate-in-netcdf-iris-cube-to-lat-lon
+fig = plt.figure(figsize=(10, 10))
+
+ax = fig.add_subplot(111, projection=ccrs.epsg(32631))
+
+# open SA file
+sa_file = 'D:/Documents/scint_UM100/scint_UM100/SA_134/BCT_IMU_15000_2016_134_12_00.tif'
+raster = rasterio.open(sa_file)
+raster_array = raster.read()
+# make all 0 vals in array nan
+raster_array[raster_array == 0.0] = np.nan
+# force non-zero vals to be 1
+bool_arr = np.ones(raster_array.shape)
+# remove nans in bool array
+nan_index = np.where(np.isnan(raster_array))
+bool_arr[nan_index] = 0.0
+
+rasterio.plot.show(bool_arr, contour=True, transform=raster.transform, contour_label_kws={}, ax=ax, zorder=10)
+
+grid_dir = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/grid_coord_lookup/grid_polygons/UM100_shapes/'
+for grid in target_grid_coords.grid.to_list():
+    grid_file_path = grid_dir + str(grid) + '.gpkg'
+    assert os.path.isfile(grid_file_path)
+    grid_gpkg = geopandas.read_file(grid_file_path)
+    grid_gpkg.boundary.plot(ax=ax, color='skyblue')
+
+
+
+# get UM coords
+proj_x = cube.coord("grid_longitude").points
+proj_y = cube.coord("grid_latitude").points
+
+# get UM coord systems
+cs_nat = cube.coord_system()
+cs_nat_cart = cs_nat.as_cartopy_projection()
+
+im = ax.pcolormesh(proj_x,
+                   proj_y,
+                   a,
+                   transform=cs_nat_cart,
+                   cmap='jet')
+
 
 print('end')
 
