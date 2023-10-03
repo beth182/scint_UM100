@@ -23,8 +23,8 @@ model = '100m'
 run = '20160512T1200Z'
 
 # QH on the hour
-# target_filetype = 'pvera'
-target_filetype = 'pexptb'
+target_filetype = 'pvera'
+# target_filetype = 'pexptb'
 
 # variable_name = 'surface_upward_sensible_heat_flux'
 # variable_name = 'upward_air_velocity'
@@ -53,8 +53,11 @@ for file in file_list_pp:
         target_files_nc.append(netcdf_dir + file.split('.')[0] + '.nc')
 
 
-target_pp_file = target_files_pp[23]
-target_nc_file = target_files_nc[23]
+# target_pp_file = target_files_pp[23]
+# target_nc_file = target_files_nc[23]
+
+target_pp_file = target_files_pp[0]
+target_nc_file = target_files_nc[0]
 
 # load one file into iris first
 # load iris cube from pp file
