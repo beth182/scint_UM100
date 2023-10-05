@@ -60,7 +60,7 @@ ll = ccrs.Geodetic()
 y_coord = 51.5214542
 x_coord = 360 - 0.138843
 
-target_xy = rot_pole.transform_point(x_coord, y_coord, ll)  # lower left corner
+target_xy = rot_pole.transform_point(x_coord, y_coord, ll)  # lower left corner INCORRECT: ACTUALLY MID POINT
 
 x_new = target_xy[0]
 y_new = target_xy[1]
