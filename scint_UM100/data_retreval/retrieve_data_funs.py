@@ -28,3 +28,14 @@ def handle_time(nc_file):
     run_times = [run_start_time + dt.timedelta(seconds=hr * 3600) for hr in run_len_hours]
 
     return run_times
+
+
+def merge(list1, list2):
+    """
+    makes tuples from 2 lists (of coords)
+    :param list1:
+    :param list2:
+    :return:
+    """
+    merged_list = [(list1[i], list2[i]) for i in range(0, len(list1))]
+    return merged_list

@@ -4,6 +4,8 @@ import netCDF4 as nc
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import rasterio.plot
+import geopandas
 
 import iris
 import cartopy.crs as ccrs
@@ -32,6 +34,8 @@ else:
 # first ouput timestamp is 1300 on the day before (DOY 133). So add 11 hours to get to midnight of target day (134)
 file_index_hour = 11 + target_hour
 
+
+# find model file
 main_dir = "//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/"
 netcdf_dir = main_dir + 'netcdf/' + run + '/' + model + '/'
 
@@ -42,8 +46,27 @@ target_file_name = 'umnsaa_' + target_filetype + str(file_index_hour).zfill(3) +
 target_file_path = netcdf_dir + target_file_name
 assert os.path.isfile(target_file_path)
 
-# read file
+
+
+
+# read model file
 nc_file = nc.Dataset(target_file_path)
+
+print('end')
+
+
+
+
+
+# checks that this is the correct hour
+run_times = retrieve_data_funs.handle_time(nc_file)
+assert run_times[0].hour == target_hour
+assert run_times[0].strftime('%j') == str(target_DOY)
+
+
+
+
+
 
 # look up grids for this hour
 sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/SA_UM100_grid_percentages.csv'
@@ -58,6 +81,18 @@ sa_grids_df.index.name = 'grid'
 hour_grid_df = sa_grids_df[sa_grids_df[str(target_hour)] > 0]
 
 target_grid_list = hour_grid_df.index.to_list()
+
+
+
+
+
+
+
+
+print('end')
+
+
+
 
 # look up the coords of these grids from the coord lookup
 coord_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/grid_coord_lookup/grid_coords.csv'
@@ -75,10 +110,22 @@ for target_grid in target_grid_list:
 
 target_grid_coords = pd.concat(lf_df_list)
 
+
+
+
+print('end')
+
+
+
+
+
+
+
 # temp read in cube
 pp_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/pp/20160512T1200Z/100m/umnsaa_pexptb023.pp'
 assert os.path.isfile(pp_file_path)
 
+# takes a long time
 cube = iris.load(pp_file_path, variable_name)[0]
 
 rot_pole = cube.coord('grid_latitude').coord_system.as_cartopy_crs()
@@ -130,12 +177,18 @@ for index, row in target_grid_coords.iterrows():
     coords = transform(outProj, inProj, real_world_xy[0], real_world_xy[1])
     """
 
-def merge(list1, list2):
-    merged_list = [(list1[i], list2[i]) for i in range(0, len(list1))]
-    return merged_list
-
 assert latitudes.shape[0] == longitudes.shape[0]
-lat_lon_tuples = merge(lat_inds, lon_inds)
+lat_lon_tuples = retrieve_data_funs.merge(lat_inds, lon_inds)
+
+
+print('end')
+
+
+
+
+
+
+
 
 var_array = nc_file.variables[variable_name][0,:,:]
 
@@ -156,16 +209,21 @@ for i in range (0, 800):
 
 
 
-import rasterio
-import rasterio.plot
-import geopandas
+
+
+
+
+
+
+
+
 
 # plot the data in real world coords
-# from stackoverflow issue: https://stackoverflow.com/questions/62346854/how-to-convert-projection-x-and-y-coordinate-in-netcdf-iris-cube-to-lat-lon
 fig = plt.figure(figsize=(10, 10))
 
 ax = fig.add_subplot(111, projection=ccrs.epsg(32631))
 
+# Plot observation SA
 # open SA file
 sa_file = 'D:/Documents/scint_UM100/scint_UM100/SA_134/BCT_IMU_15000_2016_134_12_00.tif'
 raster = rasterio.open(sa_file)
@@ -177,9 +235,10 @@ bool_arr = np.ones(raster_array.shape)
 # remove nans in bool array
 nan_index = np.where(np.isnan(raster_array))
 bool_arr[nan_index] = 0.0
-
+# plot
 rasterio.plot.show(bool_arr, contour=True, transform=raster.transform, contour_label_kws={}, ax=ax, zorder=10)
 
+# plot the grid boundry box polygons
 grid_dir = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/grid_coord_lookup/grid_polygons/UM100_shapes/'
 for grid in target_grid_coords.grid.to_list():
     grid_file_path = grid_dir + str(grid) + '.gpkg'
@@ -187,8 +246,8 @@ for grid in target_grid_coords.grid.to_list():
     grid_gpkg = geopandas.read_file(grid_file_path)
     grid_gpkg.boundary.plot(ax=ax, color='skyblue')
 
-
-
+# plot the UM data
+# from stackoverflow issue: https://stackoverflow.com/questions/62346854/how-to-convert-projection-x-and-y-coordinate-in-netcdf-iris-cube-to-lat-lon
 # get UM coords
 proj_x = cube.coord("grid_longitude").points
 proj_y = cube.coord("grid_latitude").points
@@ -210,27 +269,5 @@ print('end')
 
 
 
-print('end')
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-# handle time
-run_times = retrieve_data_funs.handle_time(nc_file)
-assert run_times[0].hour == target_hour
-assert run_times[0].strftime('%j') == str(target_DOY)
-
-level_height = nc_file.variables['level_height'][:]
-
-# handle how to target grids
-# nc_file.variables['upward_heat_flux_in_air'][:,400,400]
