@@ -13,8 +13,12 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # SA location
-sa_dir = '/scint_UM100/SA_134/'
-grid_dir = '/scint_UM100/grid_coords/grid_coord_lookup/UM100_shapes/'
+
+current_path = os.getcwd().replace('\\', '/') + '/'
+
+
+sa_dir = current_path + '../../SA_134/'
+grid_dir = current_path + '../grid_coord_lookup/grid_polygons/UM100_shapes/'
 
 hour_choice = 12
 
@@ -24,7 +28,7 @@ sa_file = 'BCT_IMU_15000_2016_134_' + str(hour_choice) + '_00.tif'
 
 raster_path = sa_dir + sa_file
 
-csv_location = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_UM100_grid_percentages.csv'
+csv_location = current_path + 'SA_UM100_grid_percentages.csv'
 
 # read SA
 
