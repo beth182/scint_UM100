@@ -11,13 +11,13 @@ from shapely.geometry import Polygon
 # ToDo: update this
 
 save_path = os.getcwd().replace('\\', '/') + '/'
-csv_location = save_path + 'rotation_tests_BTT.csv'
+csv_location = save_path + '../' + 'rotation_tests_BTT.csv'
 
 # actual run
-step_number = 80
+# step_number = 80
 
 # temp reduced
-# step_number = 5
+step_number = 5
 
 df = pd.read_csv(csv_location)
 
@@ -103,38 +103,80 @@ all_df = all_df.sort_values(['row #', 'col #']).reset_index().drop(columns=['ind
 # fig, ax = plt.subplots()
 # ax.scatter(all_df.x, all_df.y, c='k')
 
+def midpoint(p1, p2):
+    return Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2)
+
 # isolate squares
 count = 1
 for j in range(0, (step_number * 2)):
     # loop over rows
     for i in range(0, (step_number * 2)):
-        # bottom left
-        # ax.scatter(all_df[all_df['row #'] == i][all_df['col #'] == j].x,
-        #            all_df[all_df['row #'] == i][all_df['col #'] == j].y, c='r')
-        # # top left
-        # ax.scatter(all_df[all_df['row #'] == i + 1][all_df['col #'] == j].x,
-        #            all_df[all_df['row #'] == i + 1][all_df['col #'] == j].y, c='r')
-        # # top right
-        # ax.scatter(all_df[all_df['row #'] == i + 1][all_df['col #'] == j + 1].x,
-        #            all_df[all_df['row #'] == i + 1][all_df['col #'] == j + 1].y, c='r')
-        # # bottom right
-        # ax.scatter(all_df[all_df['row #'] == i][all_df['col #'] == j + 1].x,
-        #            all_df[all_df['row #'] == i][all_df['col #'] == j + 1].y, c='r')
 
-        square_df = pd.concat([all_df[all_df['row #'] == i][all_df['col #'] == j],
-                               all_df[all_df['row #'] == i + 1][all_df['col #'] == j],
-                               all_df[all_df['row #'] == i + 1][all_df['col #'] == j + 1],
-                               all_df[all_df['row #'] == i][all_df['col #'] == j + 1]])
+        if len(all_df[all_df['row #'] == i + 1][all_df['col #'] == j + 1]) == 0:
+            continue
 
-        polygon_geom = Polygon(zip(square_df.x, square_df.y))
-        polygon = gpd.GeoDataFrame(index=[0], crs='epsg:32631', geometry=[polygon_geom])
-        polygon.to_file(filename=save_path + 'UM100_shapes/' + str(count) + ".gpkg", driver="GPKG")
-        # polygon.to_file(filename=save_path + 'UM100_shapes_reduced/' + str(count) + ".gpkg", driver="GPKG")
-        # polygon.plot(ax=ax)
+        elif len(all_df[all_df['row #'] == i - 1][all_df['col #'] == j - 1]) == 0:
+            continue
+
+        else:
+
+            # Square 1
+            # to calculate BL
+            square_1_df = pd.concat([all_df[all_df['row #'] == i - 1][all_df['col #'] == j - 1],  # BL
+                                     all_df[all_df['row #'] == i][all_df['col #'] == j - 1],  # TL
+                                     all_df[all_df['row #'] == i][all_df['col #'] == j],  # TR
+                                     all_df[all_df['row #'] == i - 1][all_df['col #'] == j]])  # BR
+
+            # calculate mid point of square 1
+            BL = midpoint(square_1_df.iloc[0], square_1_df.iloc[2])
+
+            # Square 2
+            # to calculate TL
+            square_2_df = pd.concat([all_df[all_df['row #'] == i][all_df['col #'] == j - 1],  # BL
+                                     all_df[all_df['row #'] == i + 1][all_df['col #'] == j - 1],  # TL
+                                     all_df[all_df['row #'] == i + 1][all_df['col #'] == j],  # TR
+                                     all_df[all_df['row #'] == i][all_df['col #'] == j]])  # BR
+
+            # calculate mid point of square 2
+            TL = midpoint(square_2_df.iloc[0], square_2_df.iloc[2])
+
+            # Square 3
+            # to calculate TR
+            square_3_df = pd.concat([all_df[all_df['row #'] == i][all_df['col #'] == j],  # BL
+                                     all_df[all_df['row #'] == i + 1][all_df['col #'] == j],  # TL
+                                     all_df[all_df['row #'] == i + 1][all_df['col #'] == j + 1],  # TR
+                                     all_df[all_df['row #'] == i][all_df['col #'] == j + 1]])  # BR
+
+            # calculate mid point of square 3
+            TR = midpoint(square_3_df.iloc[0], square_3_df.iloc[2])
+
+            # Square 4
+            # to calculate BR
+            square_4_df = pd.concat([all_df[all_df['row #'] == i - 1][all_df['col #'] == j],  # BL
+                                     all_df[all_df['row #'] == i][all_df['col #'] == j],  # TL
+                                     all_df[all_df['row #'] == i][all_df['col #'] == j + 1],  # TR
+                                     all_df[all_df['row #'] == i - 1][all_df['col #'] == j + 1]])  # BR
+
+            # calculate mid point of square 4
+            BR = midpoint(square_4_df.iloc[0], square_4_df.iloc[2])
+
+
+            # combine into a df
+            x_list = [BL.x, TL.x, TR.x, BR.x]
+            y_list = [BL.y, TL.y, TR.y, BR.y]
+
+            square_df = pd.DataFrame({'x': x_list, 'y': y_list,
+                                      'descrip': ['BL', 'TL', 'TR', 'BR'],
+                                      'grid': list(np.ones(4) * count)})
+
+            polygon_geom = Polygon(zip(square_df.x, square_df.y))
+            polygon = gpd.GeoDataFrame(index=[0], crs='epsg:32631', geometry=[polygon_geom])
+            polygon.to_file(filename=save_path + 'UM100_shapes_temp/' + str(count) + ".gpkg", driver="GPKG")
+
+            print('end')
 
         count += 1
 
-        # ax.scatter(all_df.x, all_df.y, c='k')
 
 
 print('end')

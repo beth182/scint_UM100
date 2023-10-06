@@ -18,10 +18,10 @@ save_path = os.getcwd().replace('\\', '/') + '/'
 csv_location = save_path + 'rotation_tests_BTT.csv'
 
 # actual run
-# step_number = 80
+step_number = 80
 
 # temp reduced
-step_number = 5
+# step_number = 5
 # step_number = 1
 
 df = pd.read_csv(csv_location)
