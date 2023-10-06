@@ -8,6 +8,7 @@ import os
 from shapely.geometry import Point
 
 import warnings
+
 warnings.filterwarnings("ignore")
 
 # requires the output from running get_example_points.py to work
@@ -17,10 +18,11 @@ save_path = os.getcwd().replace('\\', '/') + '/'
 csv_location = save_path + 'rotation_tests_BTT.csv'
 
 # actual run
-step_number = 80
+# step_number = 80
 
 # temp reduced
-# step_number = 5
+step_number = 5
+# step_number = 1
 
 df = pd.read_csv(csv_location)
 
@@ -103,6 +105,7 @@ all_df = pd.concat([lon_df, all_row_df])
 
 all_df = all_df.sort_values(['row #', 'col #']).reset_index().drop(columns=['index'])
 
+
 # fig, ax = plt.subplots()
 # ax.scatter(all_df.x, all_df.y, c='k')
 
@@ -110,29 +113,81 @@ all_df = all_df.sort_values(['row #', 'col #']).reset_index().drop(columns=['ind
 def midpoint(p1, p2):
     return Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2)
 
+
 # isolate squares
 square_df_list = []
 count = 1
 for j in range(0, (step_number * 2)):
     # loop over rows
     for i in range(0, (step_number * 2)):
-        # # bottom left
-        # ax.scatter(all_df[all_df['row #'] == i][all_df['col #'] == j].x,
-        #            all_df[all_df['row #'] == i][all_df['col #'] == j].y, c='r')
-        # # top left
-        # ax.scatter(all_df[all_df['row #'] == i + 1][all_df['col #'] == j].x,
-        #            all_df[all_df['row #'] == i + 1][all_df['col #'] == j].y, c='r')
-        # # top right
-        # ax.scatter(all_df[all_df['row #'] == i + 1][all_df['col #'] == j + 1].x,
-        #            all_df[all_df['row #'] == i + 1][all_df['col #'] == j + 1].y, c='r')
-        # # bottom right
-        # ax.scatter(all_df[all_df['row #'] == i][all_df['col #'] == j + 1].x,
-        #            all_df[all_df['row #'] == i][all_df['col #'] == j + 1].y, c='r')
 
-        square_df = pd.concat([all_df[all_df['row #'] == i][all_df['col #'] == j],
-                               all_df[all_df['row #'] == i + 1][all_df['col #'] == j],
-                               all_df[all_df['row #'] == i + 1][all_df['col #'] == j + 1],
-                               all_df[all_df['row #'] == i][all_df['col #'] == j + 1]])
+        if len(all_df[all_df['row #'] == i + 1][all_df['col #'] == j + 1]) == 0:
+            continue
+
+        elif len(all_df[all_df['row #'] == i - 1][all_df['col #'] == j - 1]) == 0:
+            continue
+
+        else:
+
+            # Square 1
+            # to calculate BL
+            square_1_df = pd.concat([all_df[all_df['row #'] == i - 1][all_df['col #'] == j - 1],  # BL
+                                     all_df[all_df['row #'] == i][all_df['col #'] == j - 1],  # TL
+                                     all_df[all_df['row #'] == i][all_df['col #'] == j],  # TR
+                                     all_df[all_df['row #'] == i - 1][all_df['col #'] == j]])  # BR
+
+            # calculate mid point of square 1
+            BL = midpoint(square_1_df.iloc[0], square_1_df.iloc[2])
+
+            # Square 2
+            # to calculate TL
+            square_2_df = pd.concat([all_df[all_df['row #'] == i][all_df['col #'] == j - 1],  # BL
+                                     all_df[all_df['row #'] == i + 1][all_df['col #'] == j - 1],  # TL
+                                     all_df[all_df['row #'] == i + 1][all_df['col #'] == j],  # TR
+                                     all_df[all_df['row #'] == i][all_df['col #'] == j]])  # BR
+
+            # calculate mid point of square 2
+            TL = midpoint(square_2_df.iloc[0], square_2_df.iloc[2])
+
+            # Square 3
+            # to calculate TR
+            square_3_df = pd.concat([all_df[all_df['row #'] == i][all_df['col #'] == j],  # BL
+                                     all_df[all_df['row #'] == i + 1][all_df['col #'] == j],  # TL
+                                     all_df[all_df['row #'] == i + 1][all_df['col #'] == j + 1],  # TR
+                                     all_df[all_df['row #'] == i][all_df['col #'] == j + 1]])  # BR
+
+            # calculate mid point of square 3
+            TR = midpoint(square_3_df.iloc[0], square_3_df.iloc[2])
+
+            # Square 4
+            # to calculate BR
+            square_4_df = pd.concat([all_df[all_df['row #'] == i - 1][all_df['col #'] == j],  # BL
+                                     all_df[all_df['row #'] == i][all_df['col #'] == j],  # TL
+                                     all_df[all_df['row #'] == i][all_df['col #'] == j + 1],  # TR
+                                     all_df[all_df['row #'] == i - 1][all_df['col #'] == j + 1]])  # BR
+
+            # calculate mid point of square 4
+            BR = midpoint(square_4_df.iloc[0], square_4_df.iloc[2])
+
+
+            # combine into a df
+            x_list = [BL.x, TL.x, TR.x, BR.x, float(all_df[all_df['row #'] == i][all_df['col #'] == j].x)]
+            y_list = [BL.y, TL.y, TR.y, BR.y, float(all_df[all_df['row #'] == i][all_df['col #'] == j].y)]
+
+            square_df = pd.DataFrame({'x': x_list, 'y': y_list,
+                                      'descrip': ['BL', 'TL', 'TR', 'BR', 'MID'],
+                                      'grid': list(np.ones(5) * count)})
+
+            square_df_all = square_df.reset_index().drop(columns=['index'])
+            square_df_list.append(square_df_all)
+
+            print('end')
+
+        """
+        square_df = pd.concat([all_df[all_df['row #'] == i][all_df['col #'] == j],  # BL
+                               all_df[all_df['row #'] == i + 1][all_df['col #'] == j],  # TL
+                               all_df[all_df['row #'] == i + 1][all_df['col #'] == j + 1],  # TR
+                               all_df[all_df['row #'] == i][all_df['col #'] == j + 1]])  # BR
 
         # square_df = square_df.rename_axis(index='grid')
         square_df['descrip'] = ['BL', 'TL', 'TR', 'BR']
@@ -160,13 +215,14 @@ for j in range(0, (step_number * 2)):
 
         # mid point df
         mid_point_df = pd.DataFrame({'x': mid_point_1.x, 'y': mid_point_1.y,
-                                               'descrip': 'MID', 'grid': int(count)}, index=[0])
+                                     'descrip': 'MID', 'grid': int(count)}, index=[0])
 
         square_df_all = pd.concat([square_df, mid_point_df])
 
         square_df_all = square_df_all.reset_index().drop(columns=['index'])
 
         square_df_list.append(square_df_all)
+        """
 
         # plot
         # plt.scatter(mid_point_1.x, mid_point_1.y, c='green')
@@ -174,12 +230,13 @@ for j in range(0, (step_number * 2)):
         print(count)
         count += 1
 
-
 # combine all
 df_all_squares = pd.concat(square_df_list)
-
-
 
 print('end')
 
 df_all_squares.to_csv(save_path + 'grid_coords.csv')
+
+print('end')
+
+
