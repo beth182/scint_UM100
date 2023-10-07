@@ -7,6 +7,9 @@ import os
 import geopandas as gpd
 from shapely.geometry import Polygon
 
+import warnings
+warnings.filterwarnings("ignore")
+
 # requires the output from running get_example_points.py to work
 # ToDo: update this
 
@@ -14,10 +17,10 @@ save_path = os.getcwd().replace('\\', '/') + '/'
 csv_location = save_path + '../' + 'rotation_tests_BTT.csv'
 
 # actual run
-# step_number = 80
+step_number = 80
 
 # temp reduced
-step_number = 5
+# step_number = 5
 
 df = pd.read_csv(csv_location)
 
@@ -171,10 +174,9 @@ for j in range(0, (step_number * 2)):
 
             polygon_geom = Polygon(zip(square_df.x, square_df.y))
             polygon = gpd.GeoDataFrame(index=[0], crs='epsg:32631', geometry=[polygon_geom])
-            polygon.to_file(filename=save_path + 'UM100_shapes_temp/' + str(count) + ".gpkg", driver="GPKG")
+            polygon.to_file(filename=save_path + 'UM100_shapes/' + str(count) + ".gpkg", driver="GPKG")
 
-            print('end')
-
+        print(count)
         count += 1
 
 
