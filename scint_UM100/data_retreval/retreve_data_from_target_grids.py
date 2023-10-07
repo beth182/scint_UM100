@@ -165,6 +165,7 @@ for index, row in target_grid_coords.iterrows():
     latitudes = cube[0].coord('grid_latitude')
     longitudes = cube[0].coord('grid_longitude')
 
+    # not fully understanding why +1's are needed here
     nearest_lat = latitudes.nearest_neighbour_index(y_new) + 1
     nearest_lon = longitudes.nearest_neighbour_index(x_new) + 1
 
@@ -172,7 +173,7 @@ for index, row in target_grid_coords.iterrows():
 
 
 
-
+    # temp solution here to tuple repeat issue
 
     coord_tuple = (nearest_lat, nearest_lon)
     temp_tuple_list = tuple_list.copy()
