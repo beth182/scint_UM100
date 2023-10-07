@@ -6,19 +6,21 @@ from rasterio.mask import mask
 import matplotlib as mpl
 import glob
 import pandas as pd
+import os
 
 import warnings
 
 warnings.filterwarnings("ignore")
 
 # SA location
-sa_dir = '/scint_UM100/SA_134/'
+sa_dir = os.getcwd().replace('\\', '/') + '/../../SA_134/'
+# sa_dir = '/scint_UM100/SA_134/'
 
 # ToDo: make this flexable
 # one do do with temp grids
 # sa_file = 'BTT_BCT_15000_2016_134_08_00.tif'
-# sa_file = 'BCT_IMU_15000_2016_134_12_00.tif'
-sa_file = 'BCT_IMU_15000_2016_134_11_00.tif'
+sa_file = 'BCT_IMU_15000_2016_134_12_00.tif'
+# sa_file = 'BCT_IMU_15000_2016_134_11_00.tif'
 
 raster_path = sa_dir + sa_file
 
@@ -33,7 +35,7 @@ raster_extent = np.asarray(raster.bounds)[[0, 2, 1, 3]]
 # temp reduced grids
 # gpkg_dir_path = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/UM100_shapes_reduced/'
 
-gpkg_dir_path = '/scint_UM100/grid_coords/grid_coord_lookup/UM100_shapes/'
+gpkg_dir_path = os.getcwd().replace('\\', '/') + '/../grid_coord_lookup/grid_polygons/UM100_shapes/'
 
 # plotting all grids against raster data
 f = plt.figure(figsize=(20, 20))
@@ -54,7 +56,8 @@ grid_vals = {}
 # for i in range(3670, 3680):
 # for i in range(1, len(grid_file_list) + 1):
 # for i in range(16321, 18241):
-for i in range(16321, 17321):
+# for i in range(16321, 17321):
+for i in range(15000, 18000):
 
     print(i)
 
@@ -124,10 +127,12 @@ df_data.name = sa_file.split('.')[0].split('_')[-2]
 # pylab.savefig(save_path + 'raster_grids_' + time_string + '.png', bbox_inches='tight')
 
 # start a csv if there isn't one already
-# df_data.to_csv('D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_UM100_grid_percentages.csv', header=[sa_file.split('.')[0].split('_')[-2]])
-
+# """
+df_data.to_csv(os.getcwd().replace('\\', '/') + '/SA_UM100_grid_percentages.csv', header=[sa_file.split('.')[0].split('_')[-2]])
+# """
 # read existing csv
-existing_df = pd.read_csv('/scint_UM100/grid_coords/SA_UM100_grid_percentages.csv')
+"""
+existing_df = pd.read_csv(os.getcwd().replace('\\', '/') + '/SA_UM100_grid_percentages.csv')
 existing_df.index = existing_df['Unnamed: 0']
 existing_df = existing_df.drop(columns=['Unnamed: 0'])
 existing_df.index.name = 'grid'
@@ -136,8 +141,8 @@ existing_df.index.name = 'grid'
 all_df = pd.concat([df_data, existing_df], axis=1)
 all_df = all_df.fillna(0)
 
-all_df.to_csv('D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_UM100_grid_percentages.csv')
-
+all_df.to_csv(os.getcwd().replace('\\', '/') + '/SA_UM100_grid_percentages.csv')
+"""
 # plt.close('all')
 
 

@@ -139,6 +139,8 @@ outProj = Proj(init='epsg:4326')
 lat_inds = []
 lon_inds = []
 
+tuple_list = []
+
 for index, row in target_grid_coords.iterrows():
     print(index)
 
@@ -163,11 +165,45 @@ for index, row in target_grid_coords.iterrows():
     latitudes = cube[0].coord('grid_latitude')
     longitudes = cube[0].coord('grid_longitude')
 
-    nearest_lat = latitudes.nearest_neighbour_index(y_new)
-    nearest_lon = longitudes.nearest_neighbour_index(x_new)
+    nearest_lat = latitudes.nearest_neighbour_index(y_new) + 1
+    nearest_lon = longitudes.nearest_neighbour_index(x_new) + 1
+
+
+
+
+
+
+
+    coord_tuple = (nearest_lat, nearest_lon)
+    temp_tuple_list = tuple_list.copy()
+    temp_tuple_list.append(coord_tuple)
+
+
+
+    # check for dups
+    if len(temp_tuple_list) > 1:
+        dup = {x for x in temp_tuple_list if temp_tuple_list.count(x) > 1}
+        if len(dup) > 0:
+            nearest_lat = latitudes.nearest_neighbour_index(y_new)
+
+            new_coord_tuple = (nearest_lat, nearest_lon)
+
+            if new_coord_tuple in tuple_list:
+                print('PROBLEM')
+            else:
+                coord_tuple = new_coord_tuple
+
+    else:
+        pass
+
 
     lat_inds.append(nearest_lat)
     lon_inds.append(nearest_lon)
+
+    tuple_list.append(coord_tuple)
+
+
+
 
     # checks to see how close the converted coord back is to the orig x y in epsg 32631
     """
@@ -238,13 +274,25 @@ bool_arr[nan_index] = 0.0
 # plot
 rasterio.plot.show(bool_arr, contour=True, transform=raster.transform, contour_label_kws={}, ax=ax, zorder=10)
 
+
+target_grid_coords['grid'] = target_grid_coords['grid'].astype(int)
+
 # plot the grid boundry box polygons
 grid_dir = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/grid_coord_lookup/grid_polygons/UM100_shapes/'
 for grid in target_grid_coords.grid.to_list():
     grid_file_path = grid_dir + str(grid) + '.gpkg'
-    assert os.path.isfile(grid_file_path)
+
+    try:
+        assert os.path.isfile(grid_file_path)
+    except:
+        print('end')
+
     grid_gpkg = geopandas.read_file(grid_file_path)
     grid_gpkg.boundary.plot(ax=ax, color='skyblue')
+
+    # ax.annotate(text=grid_file_path.split('.')[0].split('/')[-1], xy=grid_gpkg.iloc[0].geometry.centroid.coords[0])
+
+
 
 # plot the UM data
 # from stackoverflow issue: https://stackoverflow.com/questions/62346854/how-to-convert-projection-x-and-y-coordinate-in-netcdf-iris-cube-to-lat-lon
