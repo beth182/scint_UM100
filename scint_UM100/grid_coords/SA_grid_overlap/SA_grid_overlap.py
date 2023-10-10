@@ -12,9 +12,6 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-
-threshold_percent = 1
-
 # SA location
 sa_dir = os.getcwd().replace('\\', '/') + '/../../SA_134/'
 # sa_dir = '/scint_UM100/SA_134/'
@@ -140,9 +137,9 @@ df_full = pd.concat([df, percent], axis=1)
 
 
 
-df_data = df_full.iloc[np.where(df_full[sa_file.split('.')[0].split('_')[-2] + ' %'] > threshold_percent)[0]]
+df_data = df_full.iloc[np.where(df_full[sa_file.split('.')[0].split('_')[-2] + ' %'] > 0)[0]]
 
-df_data_no_threshold = df_full.iloc[np.where(df_full[sa_file.split('.')[0].split('_')[-2] + ' %'] > 0)[0]]
+
 
 
 
@@ -153,9 +150,7 @@ df_data_no_threshold = df_full.iloc[np.where(df_full[sa_file.split('.')[0].split
 
 # start a csv if there isn't one already
 # """
-# df_data.to_csv(os.getcwd().replace('\\', '/') + '/SA_UM100_grid_percentages' + str(threshold_percent) + 'percent.csv', header=[sa_file.split('.')[0].split('_')[-2]])
-df_data.to_csv(os.getcwd().replace('\\', '/') + '/SA_UM100_grid_percentages_' + str(threshold_percent) + 'percent.csv')
-df_data_no_threshold.to_csv(os.getcwd().replace('\\', '/') + '/SA_UM100_grid_percentages_' + str(0) + 'percent.csv')
+df_data.to_csv(os.getcwd().replace('\\', '/') + '/SA_UM100_grid_percentages.csv')
 # """
 # read existing csv
 """

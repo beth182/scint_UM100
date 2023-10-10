@@ -25,6 +25,11 @@ model = '100m'
 run = '20160512T1200Z'
 levels = True
 
+threshold_value = 1.0
+
+
+
+
 # ToDo: move this to a lookup
 if levels == True:
     target_filetype = 'pexptb'
@@ -69,9 +74,10 @@ assert run_times[0].strftime('%j') == str(target_DOY)
 
 
 # look up grids for this hour
-sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/SA_UM100_grid_percentages_1percent.csv'
+# sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/SA_UM100_grid_percentages_1percent.csv'
 # sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/SA_UM100_grid_percentages_0percent.csv'
-# sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/SA_UM100_grid_percentages.csv'
+# sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/SA_UM100_grid_percentages_0.5percent.csv'
+sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/SA_UM100_grid_percentages.csv'
 
 sa_grids_df = pd.read_csv(sa_grids_lookup_csv)
 
@@ -80,7 +86,7 @@ sa_grids_df = sa_grids_df.drop(columns=['Unnamed: 0'])
 sa_grids_df.index.name = 'grid'
 
 # select grids with values bigger than 0 for this time
-hour_grid_df = sa_grids_df[sa_grids_df[str(target_hour)] > 0]
+hour_grid_df = sa_grids_df[sa_grids_df[str(target_hour)] > threshold_value]
 
 target_grid_list = hour_grid_df.index.to_list()
 
