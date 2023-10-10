@@ -69,7 +69,9 @@ assert run_times[0].strftime('%j') == str(target_DOY)
 
 
 # look up grids for this hour
-sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/SA_UM100_grid_percentages.csv'
+sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/SA_UM100_grid_percentages_1percent.csv'
+# sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/SA_UM100_grid_percentages_0percent.csv'
+# sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/SA_UM100_grid_percentages.csv'
 
 sa_grids_df = pd.read_csv(sa_grids_lookup_csv)
 
@@ -342,6 +344,9 @@ weighted_av_a = np.nansum(weighted_a)
 
 a_weighted_percent = (weighted_a/np.nansum(weighted_a))*100
 
+
+# len non nan vals
+# np.count_nonzero(~np.isnan(a))
 
 plt.figure()
 plt.title('UM100 $Q_H$')
