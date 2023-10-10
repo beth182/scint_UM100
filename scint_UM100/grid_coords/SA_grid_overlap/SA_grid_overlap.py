@@ -12,6 +12,9 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
+
+threshold_percent = 1
+
 # SA location
 sa_dir = os.getcwd().replace('\\', '/') + '/../../SA_134/'
 # sa_dir = '/scint_UM100/SA_134/'
@@ -57,7 +60,10 @@ grid_vals = {}
 # for i in range(1, len(grid_file_list) + 1):
 # for i in range(16321, 18241):
 # for i in range(16321, 17321):
+# for i in range(15000, 18000):
+
 for i in range(15000, 18000):
+
 
     print(i)
 
@@ -120,15 +126,36 @@ calculated_sum = np.nansum(calculated_sum_list)
 
 df = pd.Series(grid_vals, index=grid_vals.keys())
 df = df.dropna()
-df_data = df.iloc[np.where(df >0)[0]]
 
-df_data.name = sa_file.split('.')[0].split('_')[-2]
+
+# in percentages of sum:
+percent = (df / df.sum())*100
+percent.name = sa_file.split('.')[0].split('_')[-2] + ' %'
+
+
+df.name = sa_file.split('.')[0].split('_')[-2]
+
+
+df_full = pd.concat([df, percent], axis=1)
+
+
+
+df_data = df_full.iloc[np.where(df_full[sa_file.split('.')[0].split('_')[-2] + ' %'] > threshold_percent)[0]]
+
+df_data_no_threshold = df_full.iloc[np.where(df_full[sa_file.split('.')[0].split('_')[-2] + ' %'] > 0)[0]]
+
+
+
+
+
 
 # pylab.savefig(save_path + 'raster_grids_' + time_string + '.png', bbox_inches='tight')
 
 # start a csv if there isn't one already
 # """
-df_data.to_csv(os.getcwd().replace('\\', '/') + '/SA_UM100_grid_percentages.csv', header=[sa_file.split('.')[0].split('_')[-2]])
+# df_data.to_csv(os.getcwd().replace('\\', '/') + '/SA_UM100_grid_percentages' + str(threshold_percent) + 'percent.csv', header=[sa_file.split('.')[0].split('_')[-2]])
+df_data.to_csv(os.getcwd().replace('\\', '/') + '/SA_UM100_grid_percentages_' + str(threshold_percent) + 'percent.csv')
+df_data_no_threshold.to_csv(os.getcwd().replace('\\', '/') + '/SA_UM100_grid_percentages_' + str(0) + 'percent.csv')
 # """
 # read existing csv
 """
