@@ -277,7 +277,7 @@ for i in range (0, 800):
 
 
 
-
+"""
 # plot the data in real world coords
 fig = plt.figure(figsize=(10, 10))
 
@@ -334,6 +334,7 @@ im = ax.pcolormesh(proj_x,
                    transform=cs_nat_cart,
                    cmap='jet')
 
+"""
 
 print('end')
 
