@@ -113,6 +113,14 @@ target_grid_coords = pd.concat(lf_df_list)
 
 
 
+
+
+
+# combine SA weight and coord df
+target_grid_coords = target_grid_coords.join(sa_grids_df, on='grid')
+
+
+
 print('end')
 
 
@@ -220,7 +228,9 @@ lat_lon_tuples = retrieve_data_funs.merge(lat_inds, lon_inds)
 
 print('end')
 
-
+target_grid_coords['lat_inds'] = lat_inds
+target_grid_coords['lon_inds'] = lon_inds
+target_grid_coords['ind_tuples'] = lat_lon_tuples
 
 
 
@@ -231,13 +241,18 @@ var_array = nc_file.variables[variable_name][0,:,:]
 
 # start with an array full of nans
 a = np.full((800,800), np.nan)
+sa_a = np.full((800,800), np.nan)
 
 # lats
 for i in range (0, 800):
     # lons
     for j in range(0, 800):
         if (i, j) in lat_lon_tuples:
+
             a[i, j] = var_array[i,j]
+
+            sa_val = float(target_grid_coords.loc[target_grid_coords['ind_tuples'] == (i, j)]['12'])
+            sa_a[i, j] = sa_val
 
 
 
@@ -315,8 +330,43 @@ im = ax.pcolormesh(proj_x,
 print('end')
 
 
+if np.isclose(100, np.nansum(sa_a)):
+    pass
+else:
+    print('end')
+
+
+weighted_a = (sa_a/np.nansum(sa_a)) * a
+
+weighted_av_a = np.nansum(weighted_a)
+
+a_weighted_percent = (weighted_a/np.nansum(weighted_a))*100
+
+
+plt.figure()
+plt.title('UM100 $Q_H$')
+plt.imshow(a, vmin=150, vmax=500)
+plt.colorbar()
+plt.xlim(390, 420)
+plt.ylim(445, 400)
+
+plt.figure()
+plt.title('UM100 Grid: SA %')
+plt.imshow(sa_a)
+plt.colorbar()
+plt.xlim(390, 420)
+plt.ylim(445, 400)
 
 
 
+sa_a_norm = (sa_a-np.nanmin(sa_a))/(np.nanmax(sa_a)-np.nanmin(sa_a))
+sa_a_norm[np.isnan(sa_a_norm)] = 0
 
+plt.figure()
+plt.title('weighted UM100 $Q_H$')
+plt.imshow(a, alpha=sa_a_norm, vmin=150, vmax=500)
+plt.colorbar()
+plt.xlim(390, 420)
+plt.ylim(445, 400)
+plt.annotate(str(round(weighted_av_a, 1)), xy=(0.05, 0.95), xycoords='axes fraction')
 
