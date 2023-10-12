@@ -18,6 +18,7 @@ sa_dir = os.getcwd().replace('\\', '/') + '/../../SA_134/'
 
 # path = 'BCT_IMU'
 path = 'BTT_BCT'
+# path = 'IMU_BTT'
 
 # os.chdir(sa_dir)
 hour_list = []
@@ -75,6 +76,9 @@ for hour in hour_list:
     elif path == 'BTT_BCT':
         start_grid = 11000
         stop_grid = 20000
+    elif path == 'IMU_BTT':
+        start_grid = 10500
+        stop_grid = 17500
     else:
         print('end')
 
