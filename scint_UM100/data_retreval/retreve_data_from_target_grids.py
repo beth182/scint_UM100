@@ -19,8 +19,10 @@ warnings.filterwarnings("ignore")
 from scint_UM100.data_retreval import retrieve_data_funs
 
 # user inputs
+path = 'BCT_IMU'
 target_DOY = 134
-target_hour = 12
+# target_hour = 12
+target_hour = 6
 variable_name = 'upward_heat_flux_in_air'
 model = '100m'
 run = '20160512T1200Z'
@@ -60,10 +62,8 @@ assert run_times[0].hour == target_hour
 assert run_times[0].strftime('%j') == str(target_DOY)
 
 # look up grids for this hour
-# sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/SA_UM100_grid_percentages_1percent.csv'
-# sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/SA_UM100_grid_percentages_0percent.csv'
-# sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/SA_UM100_grid_percentages_0.5percent.csv'
-sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/SA_UM100_grid_percentages.csv'
+# sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/SA_UM100_grid_percentages.csv'
+sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/' + path + '_SA_UM100_grid_percentages.csv'
 
 sa_grids_df = pd.read_csv(sa_grids_lookup_csv)
 
@@ -208,8 +208,24 @@ for i in range(0, 800):
         if (i, j) in lat_lon_tuples:
             a[i, j] = var_array[i, j]
 
-            sa_val = float(target_grid_coords.loc[target_grid_coords['ind_tuples'] == (i, j)]['12'])
+            sa_val = float(target_grid_coords.loc[target_grid_coords['ind_tuples'] == (i, j)][str(target_hour)])
             sa_a[i, j] = sa_val
+
+
+if np.isclose(100, np.nansum(sa_a)):
+    pass
+else:
+    print('end')
+
+weighted_a = (sa_a / np.nansum(sa_a)) * a
+
+weighted_av_a = np.nansum(weighted_a)
+
+a_weighted_percent = (weighted_a / np.nansum(weighted_a)) * 100
+
+# len non nan vals
+# np.count_nonzero(~np.isnan(a))
+
 
 """
 # plot the data in real world coords
@@ -238,7 +254,7 @@ df_12.plot(edgecolor='red', ax=ax, linewidth=3.0)
 
 # Plot observation SA
 # open SA file
-sa_file = 'D:/Documents/scint_UM100/scint_UM100/SA_134/BCT_IMU_15000_2016_134_12_00.tif'
+sa_file = 'D:/Documents/scint_UM100/scint_UM100/SA_134/BCT_IMU_15000_2016_134_'+ str(target_hour).zfill(2) + '_00.tif'
 raster = rasterio.open(sa_file)
 raster_array = raster.read()
 # make all 0 vals in array nan
@@ -270,6 +286,9 @@ for grid in target_grid_coords.grid.to_list():
     # ax.annotate(text=grid_file_path.split('.')[0].split('/')[-1], xy=grid_gpkg.iloc[0].geometry.centroid.coords[0])
 
 
+plt.figtext(0.2, 0.83, 'n grids = ' + str(len(target_grid_list)))
+plt.figtext(0.2, 0.8, 'W av = ' + str(round(weighted_av_a, 1)))
+
 
 # plot the UM data
 # from stackoverflow issue: https://stackoverflow.com/questions/62346854/how-to-convert-projection-x-and-y-coordinate-in-netcdf-iris-cube-to-lat-lon
@@ -298,6 +317,8 @@ plt.colorbar(im)
 ax.set_xlim(283000, 287000)
 ax.set_ylim(5711000, 5718000)
 
+plt.title('DOY 134: ' + str(target_hour).zfill(2))
+
 # im = ax.pcolormesh(proj_x,
 #                    proj_y,
 #                    a,
@@ -310,23 +331,12 @@ ax.set_ylim(5711000, 5718000)
 
 print('end')
 
-if np.isclose(100, np.nansum(sa_a)):
-    pass
-else:
-    print('end')
 
-weighted_a = (sa_a / np.nansum(sa_a)) * a
-
-weighted_av_a = np.nansum(weighted_a)
-
-a_weighted_percent = (weighted_a / np.nansum(weighted_a)) * 100
-
-# len non nan vals
-# np.count_nonzero(~np.isnan(a))
 
 plt.figure()
 plt.title('UM100 $Q_H$')
-plt.imshow(a, vmin=150, vmax=500)
+# plt.imshow(a, vmin=150, vmax=500)
+plt.imshow(a)
 plt.colorbar()
 plt.xlim(390, 420)
 plt.ylim(445, 400)
@@ -343,8 +353,63 @@ sa_a_norm[np.isnan(sa_a_norm)] = 0
 
 plt.figure()
 plt.title('weighted UM100 $Q_H$')
-plt.imshow(a, alpha=sa_a_norm, vmin=150, vmax=500)
+# plt.imshow(a, alpha=sa_a_norm, vmin=150, vmax=500)
+plt.imshow(a, alpha=sa_a_norm)
 plt.colorbar()
 plt.xlim(390, 420)
 plt.ylim(445, 400)
 plt.annotate(str(round(weighted_av_a, 1)), xy=(0.05, 0.95), xycoords='axes fraction')
+
+
+# no map no alpha real world coords
+"""
+
+# plot the data in real world coords
+# from stackoverflow issue: https://stackoverflow.com/questions/62346854/how-to-convert-projection-x-and-y-coordinate-in-netcdf-iris-cube-to-lat-lon
+fig = plt.figure(figsize=(10, 10))
+
+ax = fig.add_subplot(111, projection=ccrs.epsg(32631))
+
+# open SA file
+sa_file = 'D:/Documents/scint_UM100/scint_UM100/SA_134/BCT_IMU_15000_2016_134_' + str(target_hour).zfill(2) + '_00.tif'
+raster = rasterio.open(sa_file)
+raster_array = raster.read()
+# make all 0 vals in array nan
+raster_array[raster_array == 0.0] = np.nan
+# force non-zero vals to be 1
+bool_arr = np.ones(raster_array.shape)
+# remove nans in bool array
+nan_index = np.where(np.isnan(raster_array))
+bool_arr[nan_index] = 0.0
+
+rasterio.plot.show(bool_arr, contour=True, transform=raster.transform, contour_label_kws={}, ax=ax, zorder=10)
+
+grid_dir = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/grid_coord_lookup/grid_polygons/UM100_shapes/'
+for grid in target_grid_coords.grid.to_list():
+    grid_file_path = grid_dir + str(int(grid)) + '.gpkg'
+    
+    
+    if os.path.isfile(grid_file_path):
+        pass
+    else:
+        print(grid_file_path)
+        
+    grid_gpkg = geopandas.read_file(grid_file_path)
+    grid_gpkg.boundary.plot(ax=ax, color='skyblue')
+
+
+
+# get UM coords
+proj_x = cube.coord("grid_longitude").points
+proj_y = cube.coord("grid_latitude").points
+
+# get UM coord systems
+cs_nat = cube.coord_system()
+cs_nat_cart = cs_nat.as_cartopy_projection()
+
+im = ax.pcolormesh(proj_x,
+                   proj_y,
+                   a,
+                   transform=cs_nat_cart,
+                   cmap='jet')
+"""
