@@ -28,7 +28,8 @@ target_DOY = 134
 target_hours = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
 
 variable_name = 'upward_heat_flux_in_air'
-model = '100m'
+# model = '100m'
+model = '300m'
 run = '20160512T1200Z'
 levels = True
 
@@ -41,7 +42,7 @@ if levels == True:
 else:
     target_filetype = 'pvera'
 
-csv_name = path + '_' + str(target_DOY).zfill(3) + '_UM100_QH.csv'
+csv_name = path + '_' + str(target_DOY).zfill(3) + '_UM100_QH_' + model + '.csv'
 csv_path = os.getcwd().replace('\\', '/') + '/' + csv_name
 
 # check to see if the index exists
