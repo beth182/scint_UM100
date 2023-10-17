@@ -19,7 +19,7 @@ model = '300m'
 # ToDo: update this
 
 save_path = os.getcwd().replace('\\', '/') + '/'
-csv_location = save_path + 'rotation_tests_BTT_' + model + '.csv'
+csv_location = save_path + '../' + 'rotation_tests_BTT_' + model + '.csv'
 
 # actual run
 if model == '100m':
@@ -184,7 +184,7 @@ for j in range(0, (step_number * 2)):
 
             polygon_geom = Polygon(zip(square_df.x, square_df.y))
             polygon = gpd.GeoDataFrame(index=[0], crs='epsg:32631', geometry=[polygon_geom])
-            polygon.to_file(filename=save_path + 'UM100_shapes/' + str(count) + ".gpkg", driver="GPKG")
+            polygon.to_file(filename=save_path + 'UM' + model.split('m')[0] + '_shapes/' + str(count) + ".gpkg", driver="GPKG")
 
         print(count)
         count += 1
