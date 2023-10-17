@@ -10,14 +10,24 @@ from shapely.geometry import Polygon
 import warnings
 warnings.filterwarnings("ignore")
 
+
+
+# model = '100m'
+model = '300m'
+
 # requires the output from running get_example_points.py to work
 # ToDo: update this
 
 save_path = os.getcwd().replace('\\', '/') + '/'
-csv_location = save_path + '../' + 'rotation_tests_BTT.csv'
+csv_location = save_path + 'rotation_tests_BTT_' + model + '.csv'
 
 # actual run
-step_number = 80
+if model == '100m':
+    step_number = 80
+elif model == '300m':
+    step_number = 25
+else:
+    print('end')
 
 # temp reduced
 # step_number = 5
