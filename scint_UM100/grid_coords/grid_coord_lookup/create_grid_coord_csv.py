@@ -11,14 +11,30 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-# requires the output from running get_example_points.py to work
-# ToDo: update this
+
+
+# model = '100m'
+model = '300m'
 
 save_path = os.getcwd().replace('\\', '/') + '/'
-csv_location = save_path + 'rotation_tests_BTT.csv'
+# requires the output from running get_example_points.py to work
+# ToDo: update this
+csv_location = save_path + 'rotation_tests_BTT_' + model + '.csv'
+
+
 
 # actual run
-step_number = 80
+if model == '100m':
+
+    step_number = 80
+
+elif model == '300m':
+
+    step_number = 25
+
+else:
+
+    print('end')
 
 # temp reduced
 # step_number = 5
@@ -235,7 +251,7 @@ df_all_squares = pd.concat(square_df_list)
 
 print('end')
 
-df_all_squares.to_csv(save_path + 'grid_coords.csv')
+df_all_squares.to_csv(save_path + 'grid_coords_' + model + '.csv')
 
 print('end')
 

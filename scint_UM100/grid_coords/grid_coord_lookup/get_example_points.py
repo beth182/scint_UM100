@@ -8,8 +8,8 @@ from pyproj import Proj, transform
 import pandas as pd
 
 # user choices
-model = '100m'
-# model = '300m'
+# model = '100m'
+model = '300m'
 # model = 'ukv'
 
 run = '20160512T1200Z'
@@ -127,6 +127,7 @@ df = pd.DataFrame.from_dict({'name': point_list, 'x': x_list, 'y': y_list})
 df = df.set_index('name')
 
 # df.to_csv(save_path + 'rotation_tests.csv')
-df.to_csv(save_path + 'rotation_tests_BTT.csv')
+# df.to_csv(save_path + 'rotation_tests_BTT.csv')
+df.to_csv(save_path + 'rotation_tests_BTT_' + model + '.csv')
 
 print('end')
