@@ -13,7 +13,8 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # model = '100m'
-model = '300m'
+# model = '300m'
+model = 'ukv'
 
 
 # SA location
@@ -84,6 +85,9 @@ for hour in hour_list:
     elif model == '300m':
         start_grid = 1
         stop_grid = 2401
+    elif model == 'ukv':
+        start_grid = 1
+        stop_grid = 122
     else:
         print('end')
 

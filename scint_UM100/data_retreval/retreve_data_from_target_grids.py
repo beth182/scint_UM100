@@ -29,7 +29,9 @@ target_hours = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
 
 variable_name = 'upward_heat_flux_in_air'
 # model = '100m'
-model = '300m'
+# model = '300m'
+model = 'ukv'
+
 run = '20160512T1200Z'
 levels = True
 
@@ -105,6 +107,8 @@ for target_hour in target_hours:
         hour_grid_df = sa_grids_df[sa_grids_df[str(target_hour)] > threshold_value]
     elif model == '300m':
         hour_grid_df = sa_grids_df[sa_grids_df[str(target_hour).zfill(2)] > threshold_value]
+    elif model == 'ukv':
+        hour_grid_df = sa_grids_df[sa_grids_df[str(target_hour).zfill(2)] > threshold_value]
     else:
         print('end')
 
@@ -135,8 +139,12 @@ for target_hour in target_hours:
     print('end')
 
     # temp read in cube
-    # pp_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/pp/20160512T1200Z/100m/umnsaa_pexptb023.pp'
-    pp_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/pp/20160512T1200Z/' + model.split('m')[0] + 'm/umnsaa_pexptb023.pp'
+
+    if model == 'ukv':
+        pp_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/pp/20160512T1200Z/' + model.split('m')[0] + '/umnsaa_pexptb023.pp'
+    else:
+        pp_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/pp/20160512T1200Z/' + model.split('m')[0] + 'm/umnsaa_pexptb023.pp'
+
     assert os.path.isfile(pp_file_path)
 
     # takes a long time
@@ -178,6 +186,9 @@ for target_hour in target_hours:
 
         latitudes = cube[0].coord('grid_latitude')
         longitudes = cube[0].coord('grid_longitude')
+
+        if model == 'ukv':
+            longitudes = longitudes - 360
 
         # not fully understanding why +1's are needed here
         # nearest_lat = latitudes.nearest_neighbour_index(y_new) + 1
@@ -221,7 +232,6 @@ for target_hour in target_hours:
         coords = transform(outProj, inProj, real_world_xy[0], real_world_xy[1])
         """
 
-    assert latitudes.shape[0] == longitudes.shape[0]
     lat_lon_tuples = retrieve_data_funs.merge(lat_inds, lon_inds)
 
     print('end')
@@ -233,17 +243,26 @@ for target_hour in target_hours:
     var_array = nc_file.variables[variable_name][0, :, :]
 
     # check if the model domain is a square
-    assert var_array.shape[0] == var_array.shape[1]
-    array_size = var_array.shape[0]
+
+    if model == 'ukv':
+        array_size_i = var_array.shape[0]
+        array_size_j = var_array.shape[1]
+
+    else:
+        assert latitudes.shape[0] == longitudes.shape[0]
+        assert var_array.shape[0] == var_array.shape[1]
+
+        array_size_i = var_array.shape[0]
+        array_size_j = var_array.shape[0]
 
     # start with an array full of nans
-    a = np.full((array_size, array_size), np.nan)
-    sa_a = np.full((array_size, array_size), np.nan)
+    a = np.full((array_size_i, array_size_j), np.nan)
+    sa_a = np.full((array_size_i, array_size_j), np.nan)
 
     # lats
-    for i in range(0, array_size):
+    for i in range(0, array_size_i):
         # lons
-        for j in range(0, array_size):
+        for j in range(0, array_size_j):
             if (i, j) in lat_lon_tuples:
                 a[i, j] = var_array[i, j]
 
