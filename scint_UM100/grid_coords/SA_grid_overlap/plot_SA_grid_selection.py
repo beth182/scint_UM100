@@ -17,7 +17,8 @@ warnings.filterwarnings("ignore")
 current_path = os.getcwd().replace('\\', '/') + '/'
 
 # model = '100m'
-model = '300m'
+# model = '300m'
+model = 'ukv'
 
 path = 'BCT_IMU'
 
