@@ -9,8 +9,8 @@ import pandas as pd
 
 # user choices
 # model = '100m'
-model = '300m'
-# model = 'ukv'
+# model = '300m'
+model = 'ukv'
 
 run = '20160512T1200Z'
 
@@ -67,6 +67,9 @@ y_new = target_xy[1]
 
 latitudes = cube[0].coord('grid_latitude')
 longitudes = cube[0].coord('grid_longitude')
+
+if model == 'ukv':
+    longitudes = longitudes - 360
 
 nearest_lat_1 = latitudes.nearest_neighbour_index(y_new)
 nearest_lon_1 = longitudes.nearest_neighbour_index(x_new)

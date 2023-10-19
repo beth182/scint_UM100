@@ -13,7 +13,8 @@ warnings.filterwarnings("ignore")
 
 
 # model = '100m'
-model = '300m'
+# model = '300m'
+model = 'ukv'
 
 # requires the output from running get_example_points.py to work
 # ToDo: update this
@@ -26,6 +27,8 @@ if model == '100m':
     step_number = 80
 elif model == '300m':
     step_number = 25
+elif model == 'ukv':
+    step_number = 6
 else:
     print('end')
 
