@@ -12,12 +12,16 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
+# model = '100m'
+model = '300m'
+
+
 # SA location
 sa_dir = os.getcwd().replace('\\', '/') + '/../../SA_134/'
 # sa_dir = '/scint_UM100/SA_134/'
 
-# path = 'BCT_IMU'
-path = 'BTT_BCT'
+path = 'BCT_IMU'
+# path = 'BTT_BCT'
 # path = 'IMU_BTT'
 
 # os.chdir(sa_dir)
@@ -45,7 +49,7 @@ for hour in hour_list:
     # temp reduced grids
     # gpkg_dir_path = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/UM100_shapes_reduced/'
 
-    gpkg_dir_path = os.getcwd().replace('\\', '/') + '/../grid_coord_lookup/grid_polygons/UM100_shapes/'
+    gpkg_dir_path = os.getcwd().replace('\\', '/') + '/../grid_coord_lookup/grid_polygons/' + 'UM' + model.split('m')[0] + '_shapes/'
 
     # plotting all grids against raster data
     f = plt.figure(figsize=(20, 20))
@@ -63,22 +67,23 @@ for hour in hour_list:
     # makes list to see total value outside loop
     grid_vals = {}
 
-    # for i in range(3670, 3680):
-    # for i in range(1, len(grid_file_list) + 1):
-    # for i in range(16321, 18241):
-    # for i in range(16321, 17321):
-    # for i in range(15000, 18000):
 
-    if path == 'BCT_IMU':
-        start_grid = 15000
-        stop_grid = 20000
-        # stop_grid = 15500
-    elif path == 'BTT_BCT':
-        start_grid = 11000
-        stop_grid = 20000
-    elif path == 'IMU_BTT':
-        start_grid = 10500
-        stop_grid = 17500
+    if model == '100m':
+        if path == 'BCT_IMU':
+            start_grid = 15000
+            stop_grid = 20000
+            # stop_grid = 15500
+        elif path == 'BTT_BCT':
+            start_grid = 11000
+            stop_grid = 20000
+        elif path == 'IMU_BTT':
+            start_grid = 10500
+            stop_grid = 17500
+        else:
+            print('end')
+    elif model == '300m':
+        start_grid = 1
+        stop_grid = 2401
     else:
         print('end')
 
@@ -158,9 +163,9 @@ for hour in hour_list:
 
     # pylab.savefig(save_path + 'raster_grids_' + time_string + '.png', bbox_inches='tight')
 
-    if os.path.isfile(os.getcwd().replace('\\', '/') + '/' + path + '_SA_UM100_grid_percentages.csv'):
+    if os.path.isfile(os.getcwd().replace('\\', '/') + '/' + path + '_SA_' + 'UM' + model.split('m')[0] + '_grid_percentages.csv'):
         # read existing csv
-        existing_df = pd.read_csv(os.getcwd().replace('\\', '/') + '/' + path + '_SA_UM100_grid_percentages.csv')
+        existing_df = pd.read_csv(os.getcwd().replace('\\', '/') + '/' + path+ '_SA_' + 'UM' + model.split('m')[0] + '_grid_percentages.csv')
 
         existing_df.index = existing_df['Unnamed: 0']
         existing_df = existing_df.drop(columns=['Unnamed: 0'])
@@ -169,9 +174,9 @@ for hour in hour_list:
         all_df = pd.concat([df_data, existing_df], axis=1)
         all_df = all_df.fillna(0)
 
-        all_df.to_csv(os.getcwd().replace('\\', '/') + '/' + path + '_SA_UM100_grid_percentages.csv')
+        all_df.to_csv(os.getcwd().replace('\\', '/') + '/' + path + '_SA_' + 'UM' + model.split('m')[0] + '_grid_percentages.csv')
 
     else:
-        df_data.to_csv(os.getcwd().replace('\\', '/') + '/' + path + '_SA_UM100_grid_percentages.csv')
+        df_data.to_csv(os.getcwd().replace('\\', '/') + '/' + path + '_SA_' + 'UM' + model.split('m')[0] + '_grid_percentages.csv')
 
 print('end')

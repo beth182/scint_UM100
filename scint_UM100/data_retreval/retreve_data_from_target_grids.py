@@ -91,7 +91,8 @@ for target_hour in target_hours:
 
     # look up grids for this hour
     # sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/SA_UM100_grid_percentages.csv'
-    sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/' + path + '_SA_UM100_grid_percentages.csv'
+    # sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/' + path + '_SA_UM100_grid_percentages.csv'
+    sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/' + path + '_SA_UM' + model.split('m')[0] + '_grid_percentages.csv'
 
     sa_grids_df = pd.read_csv(sa_grids_lookup_csv)
 
@@ -100,14 +101,19 @@ for target_hour in target_hours:
     sa_grids_df.index.name = 'grid'
 
     # select grids with values bigger than 0 for this time
-    hour_grid_df = sa_grids_df[sa_grids_df[str(target_hour)] > threshold_value]
+    if model == '100m':
+        hour_grid_df = sa_grids_df[sa_grids_df[str(target_hour)] > threshold_value]
+    elif model == '300m':
+        hour_grid_df = sa_grids_df[sa_grids_df[str(target_hour).zfill(2)] > threshold_value]
+    else:
+        print('end')
 
     target_grid_list = hour_grid_df.index.to_list()
 
     print('end')
 
     # look up the coords of these grids from the coord lookup
-    coord_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/grid_coord_lookup/grid_coords.csv'
+    coord_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/grid_coord_lookup/grid_coords_' + model + '.csv'
 
     coord_lookup_df = pd.read_csv(coord_lookup_csv)
 
@@ -225,18 +231,22 @@ for target_hour in target_hours:
 
     var_array = nc_file.variables[variable_name][0, :, :]
 
+    # check if the model domain is a square
+    assert var_array.shape[0] == var_array.shape[1]
+    array_size = var_array.shape[0]
+
     # start with an array full of nans
-    a = np.full((800, 800), np.nan)
-    sa_a = np.full((800, 800), np.nan)
+    a = np.full((array_size, array_size), np.nan)
+    sa_a = np.full((array_size, array_size), np.nan)
 
     # lats
-    for i in range(0, 800):
+    for i in range(0, array_size):
         # lons
-        for j in range(0, 800):
+        for j in range(0, array_size):
             if (i, j) in lat_lon_tuples:
                 a[i, j] = var_array[i, j]
 
-                sa_val = float(target_grid_coords.loc[target_grid_coords['ind_tuples'] == (i, j)][str(target_hour)])
+                sa_val = float(target_grid_coords.loc[target_grid_coords['ind_tuples'] == (i, j)][str(target_hour).zfill(2)])
                 sa_a[i, j] = sa_val
 
     if np.isclose(100, np.nansum(sa_a)):
