@@ -29,8 +29,8 @@ target_hours = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
 
 variable_name = 'upward_heat_flux_in_air'
 # model = '100m'
-# model = '300m'
-model = 'ukv'
+model = '300m'
+# model = 'ukv'
 
 run = '20160512T1200Z'
 levels = True
@@ -278,66 +278,66 @@ for target_hour in target_hours:
     weighted_av_a = np.nansum(weighted_a)
     a_weighted_percent = (weighted_a / np.nansum(weighted_a)) * 100
 
-    # threshold_list = np.arange(0.0001, 1, 0.0001).tolist()
-    #
-    # w_av_threshold_list = []
-    # len_grids_threshold_list = []
-    #
-    # print(' ')
-    # for i in threshold_list:
-    #     print(i)
-    #
-    #     # loop through different thresholds
-    #     temp_sa = np.ma.masked_where(sa_a <= i, sa_a)
-    #     temp_a = np.ma.masked_where(sa_a <= i, a)
-    #
-    #     weighted_temp_a = (temp_sa / np.nansum(temp_sa)) * temp_a
-    #
-    #     weighted_av_temp_a = np.nansum(weighted_temp_a)
-    #     w_av_threshold_list.append(weighted_av_temp_a)
-    #
-    #     len_grids_temp = temp_sa.count() + np.count_nonzero(~np.isnan(temp_a.data)) - np.count_nonzero(
-    #         ~np.isnan(temp_a.mask))
-    #     len_grids_threshold_list.append(len_grids_temp)
-    #
-    # # """
-    #
-    # fig, ax1 = plt.subplots(figsize=(10,6))
-    # ax2 = ax1.twinx()
-    #
-    # plt.title(str(target_DOY) + ' ' + str(target_hour).zfill(2))
-    #
-    # ax1.scatter(threshold_list, w_av_threshold_list, c='r', marker='.')
-    #
-    # ax1.set_ylabel('Weighted Average UM100 $Q_{H}$ ($W$ $m^{2}$)')
-    #
-    # ax2.set_ylabel('# of UM100 grids')
-    #
-    # ax1.set_xlabel('SA Weight Threshold')
-    #
-    # ax2.spines['left'].set_color('r')
-    #
-    # ax2.spines['right'].set_color('b')
-    #
-    # ax2.tick_params(which='both', color='blue')
-    # ax1.tick_params(axis='y', which='both', color='red')
-    # ax1.yaxis.label.set_color('r')
-    # ax2.yaxis.label.set_color('b')
-    #
-    # ax1.tick_params(axis='y', colors='r')
-    # ax2.tick_params(axis='y', colors='b')
-    #
-    # ax2.scatter(threshold_list, len_grids_threshold_list, c='b', marker='.')
-    #
-    # current_path = os.getcwd().replace('\\', '/') + '/plots/changing_thresholds/'
-    # plt.savefig(current_path + path + '_' + str(target_hour).zfill(2) + '.png', layout='tight', dpi=300)
-    #
-    # # """
-    #
-    # print('end')
+    threshold_list = np.arange(0.0001, 1, 0.0001).tolist()
 
+    w_av_threshold_list = []
+    len_grids_threshold_list = []
+
+    print(' ')
+    for i in threshold_list:
+        print(i)
+
+        # loop through different thresholds
+        temp_sa = np.ma.masked_where(sa_a <= i, sa_a)
+        temp_a = np.ma.masked_where(sa_a <= i, a)
+
+        weighted_temp_a = (temp_sa / np.nansum(temp_sa)) * temp_a
+
+        weighted_av_temp_a = np.nansum(weighted_temp_a)
+        w_av_threshold_list.append(weighted_av_temp_a)
+
+        len_grids_temp = temp_sa.count() + np.count_nonzero(~np.isnan(temp_a.data)) - np.count_nonzero(
+            ~np.isnan(temp_a.mask))
+        len_grids_threshold_list.append(len_grids_temp)
 
     # """
+
+    fig, ax1 = plt.subplots(figsize=(10,6))
+    ax2 = ax1.twinx()
+
+    plt.title(str(target_DOY) + ' ' + str(target_hour).zfill(2))
+
+    ax1.scatter(threshold_list, w_av_threshold_list, c='r', marker='.')
+
+    ax1.set_ylabel('Weighted Average UM100 $Q_{H}$ ($W$ $m^{2}$)')
+
+    ax2.set_ylabel('# of UM100 grids')
+
+    ax1.set_xlabel('SA Weight Threshold')
+
+    ax2.spines['left'].set_color('r')
+
+    ax2.spines['right'].set_color('b')
+
+    ax2.tick_params(which='both', color='blue')
+    ax1.tick_params(axis='y', which='both', color='red')
+    ax1.yaxis.label.set_color('r')
+    ax2.yaxis.label.set_color('b')
+
+    ax1.tick_params(axis='y', colors='r')
+    ax2.tick_params(axis='y', colors='b')
+
+    ax2.scatter(threshold_list, len_grids_threshold_list, c='b', marker='.')
+
+    current_path = os.getcwd().replace('\\', '/') + '/plots/changing_thresholds/' + model + '/'
+    plt.savefig(current_path + path + '_' + str(target_hour).zfill(2) + '.png', layout='tight', dpi=300)
+
+    # """
+
+    print('end')
+
+
+    """
     # create or write to csv file of weighted average values
     out_df = pd.DataFrame({'hour': [target_hour], 'weighted_av_a': [weighted_av_a], 'av_a': [np.nanmean(a)],
                            'len_grids': [len(target_grid_list)]})
@@ -455,7 +455,7 @@ for target_hour in target_hours:
 
     plt.savefig(current_path + model + '/' + path + '_' + str(target_hour).zfill(2) + '.png', layout='tight')
 
-    # """
+    """
 
 
 print('end')
