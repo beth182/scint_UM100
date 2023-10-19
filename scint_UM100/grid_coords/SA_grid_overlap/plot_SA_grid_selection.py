@@ -16,9 +16,13 @@ warnings.filterwarnings("ignore")
 
 current_path = os.getcwd().replace('\\', '/') + '/'
 
+# model = '100m'
+model = '300m'
+
+path = 'BCT_IMU'
 
 sa_dir = current_path + '../../SA_134/'
-grid_dir = current_path + '../grid_coord_lookup/grid_polygons/UM100_shapes/'
+grid_dir = current_path + '../grid_coord_lookup/grid_polygons/UM' + model.split('m')[0] + '_shapes/'
 
 hour_choice = 12
 
@@ -28,7 +32,7 @@ sa_file = 'BCT_IMU_15000_2016_134_' + str(hour_choice) + '_00.tif'
 
 raster_path = sa_dir + sa_file
 
-csv_location = current_path + 'SA_UM100_grid_percentages.csv'
+csv_location = current_path + path + '_SA_UM' + model.split('m')[0] + '_grid_percentages.csv'
 
 # read SA
 
@@ -46,7 +50,10 @@ existing_df.index = existing_df['Unnamed: 0']
 existing_df = existing_df.drop(columns=['Unnamed: 0'])
 existing_df.index.name = 'grid'
 
-hour_grids = existing_df[str(hour_choice)].index.to_list()
+all_hour_df = existing_df[str(hour_choice)]
+hour_df = all_hour_df.iloc[np.where(all_hour_df >0)[0]]
+
+hour_grids = hour_df.index.to_list()
 
 for grid in hour_grids:
     print(grid)
