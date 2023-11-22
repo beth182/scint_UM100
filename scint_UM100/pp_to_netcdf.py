@@ -1,7 +1,7 @@
 from os import listdir
 from os.path import isfile, join
 import os
-# import iris
+import iris
 
 # Actual version of this script is on the RACC
 
@@ -11,12 +11,13 @@ model = '100m'
 
 run = '20160512T1200Z'
 
-main_dir = '/storage/basic/micromet/Tier_processing/rv006011/UM100/'
-# main_dir = "//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/"
+# main_dir = '/storage/basic/micromet/Tier_processing/rv006011/UM100/'
+main_dir = "//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/"
 
-pp_dir = main_dir + 'pp/' + run + '/' + model + '/'
+# pp_dir = main_dir + 'pp/' + run + '/' + model + '/'
+pp_dir = main_dir + 'UM100_ancillaries/london_100m/'
 
-netcdf_dir = main_dir + 'netcdf/' + run + '/' + model + '/'
+netcdf_dir = main_dir + 'netcdf/' + run + '/UM100_ancillaries/'
 
 # check if the write out dir exists
 if os.path.isdir(netcdf_dir) == False:
@@ -28,4 +29,4 @@ for file_path in file_list:
     print(pp_dir + file_path)
 
     cubes = iris.load(pp_dir + file_path)
-    iris.save(cubes, netcdf_dir + file_path.split('.')[0] + '.nc')
+    iris.save(cubes, netcdf_dir + file_path.replace('.', '_') + '.nc')
