@@ -5,8 +5,8 @@ import iris
 
 # Actual version of this script is on the RACC
 
-model = '100m'
-# model = '300m'
+# model = '100m'
+model = '300m'
 # model = 'ukv'
 
 run = '20160512T1200Z'
@@ -15,9 +15,9 @@ run = '20160512T1200Z'
 main_dir = "//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/"
 
 # pp_dir = main_dir + 'pp/' + run + '/' + model + '/'
-pp_dir = main_dir + 'UM100_ancillaries/london_100m/'
+pp_dir = main_dir + 'UM100_ancillaries/london_' + model + '/'
 
-netcdf_dir = main_dir + 'netcdf/' + run + '/UM100_ancillaries/'
+netcdf_dir = main_dir + 'netcdf/' + run + '/UM' + model.split('m')[0] + '_ancillaries/'
 
 # check if the write out dir exists
 if os.path.isdir(netcdf_dir) == False:
