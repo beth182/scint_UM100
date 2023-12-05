@@ -12,7 +12,8 @@ import numpy as np
 # get the LC fractions for that grid
 # save them as a file
 
-model = '100m'
+# model = '100m'
+model = '300m'
 stash_code = 'm01s00i216'
 
 # get the location of the target grid in rw coords
@@ -27,7 +28,7 @@ grid_coords = coord_lookup_df[coord_lookup_df.descrip == 'MID']
 # convert to MO cords
 # temp read in cube
 
-pp_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/UM100_ancillaries/london_100m/qrparm.veg.frac.urb2t'
+pp_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/UM100_ancillaries/london_' + model + '/qrparm.veg.frac.urb2t'
 
 assert os.path.isfile(pp_file_path)
 
@@ -44,7 +45,7 @@ outProj = Proj(init='epsg:4326')
 
 
 # read nc file
-nc_file_path = "//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/netcdf/20160512T1200Z/UM100_ancillaries/qrparm_veg_frac_urb2t.nc"
+nc_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/netcdf/20160512T1200Z/UM' + model.split('m')[0] + '_ancillaries/qrparm_veg_frac_urb2t.nc'
 nc_file = nc.Dataset(nc_file_path)
 
 LC_array = nc_file.variables[stash_code]
@@ -118,7 +119,7 @@ for index, row in grid_coords.iterrows():
 
 save_path = os.getcwd().replace('\\', '/') + '/'
 all_grids_df = pd.concat(lc_df_list)
-all_grids_df.to_csv(save_path + 'all_grids_lc.csv')
-print('CSV saved to: ' + save_path + 'all_grids_lc.csv')
+all_grids_df.to_csv(save_path + model + '_all_grids_lc.csv')
+print('CSV saved to: ' + save_path + model + '_all_grids_lc.csv')
 
 print('end')
