@@ -4,65 +4,119 @@ import matplotlib.pyplot as plt
 import iris
 import cartopy.crs as ccrs
 
-model = '100m'
+
+
+
 stash_code = 'm01s00i216'
 
+pp_file_path_100 = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/UM100_ancillaries/london_' + '100m' + '/qrparm.veg.frac.urb2t'
+pp_file_path_300 = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/UM100_ancillaries/london_' + '300m' + '/qrparm.veg.frac.urb2t'
+pp_file_path_ukv = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/landuse/maggie_new/qrparm.veg.frac'
 
+assert os.path.isfile(pp_file_path_100)
+assert os.path.isfile(pp_file_path_300)
+assert os.path.isfile(pp_file_path_ukv)
 
-# read in the ancil file for the model
+# load the UM cubes
 
+cube_100 = iris.load(pp_file_path_100, stash_code)[0]
+cube_300 = iris.load(pp_file_path_300, stash_code)[0]
 
-if model == 'ukv':
+cube_ukv = iris.load(pp_file_path_ukv, stash_code)[0]
 
-    pp_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/landuse/maggie_new/qrparm.veg.frac'
-
-else:
-
-    pp_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/UM100_ancillaries/london_' + model + '/qrparm.veg.frac.urb2t'
-
-
-nc_file_path = nc_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/netcdf/20160512T1200Z/UM' + model.split('m')[0] + '_ancillaries/qrparm_veg_frac_urb2t.nc'
-
-
-
-assert os.path.isfile(nc_file_path)
-assert os.path.isfile(pp_file_path)
-
-
-# locd the PP file to get the coord rotation
-# load one file into iris first
-# load iris cube from pp file
-cube = iris.load(pp_file_path, stash_code)[0]
 # get UM coords
-proj_x = cube.coord("grid_longitude").points
-proj_y = cube.coord("grid_latitude").points
+proj_x_100 = cube_100.coord("grid_longitude").points
+proj_y_100 = cube_100.coord("grid_latitude").points
 
-# get UM coord systems
-cs_nat = cube.coord_system()
-cs_nat_cart = cs_nat.as_cartopy_projection()
+# get the max and min coords for the UM100
+proj_x_100_max = proj_x_100.max()
+proj_x_100_min = proj_x_100.min()
+proj_y_100_max = proj_y_100.max()
+proj_y_100_min = proj_y_100.min()
+
+# create a constraint the to match 300 and UKV cube to 100's domain
+gcon_300 = iris.Constraint(coord_values={'grid_latitude': lambda cell: proj_y_100_min < cell < proj_y_100_max,
+                                         'grid_longitude': lambda cell: proj_x_100_min < cell < proj_x_100_max})
+
+gcon_ukv = iris.Constraint(coord_values={'grid_latitude': lambda cell: proj_y_100_min < cell < proj_y_100_max,
+                                         'grid_longitude': lambda
+                                             cell: proj_x_100_min + 360 < cell < proj_x_100_max + 360})
+
+# extract
+extracted_300 = cube_300.extract(gcon_300)
+extracted_ukv = cube_ukv.extract(gcon_ukv)
+
+# get UM coords for extracted
+proj_x_300 = extracted_300.coord("grid_longitude").points
+proj_y_300 = extracted_300.coord("grid_latitude").points
+
+proj_x_ukv = extracted_ukv.coord("grid_longitude").points
+proj_y_ukv = extracted_ukv.coord("grid_latitude").points
 
 
 
+# load the nc files
+
+nc_file_path_100 = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/netcdf/20160512T1200Z/UM' + '100' + '_ancillaries/qrparm_veg_frac_urb2t.nc'
+nc_file_path_300 = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/nc_ancils_crop/extracted_300.nc'
+nc_file_path_ukv = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/nc_ancils_crop/extracted_ukv.nc'
+
+assert os.path.isfile(nc_file_path_100)
+assert os.path.isfile(nc_file_path_300)
+assert os.path.isfile(nc_file_path_ukv)
 
 
+# read the nc files for vals
+nc_file_100 = nc.Dataset(nc_file_path_100)
+urban_100 = nc_file_100.variables[stash_code][-1, :, :] + nc_file_100.variables[stash_code][-2, :, :]
 
-# read the nc file for vals
-nc_file = nc.Dataset(nc_file_path)
-lc_fracs = nc_file.variables[stash_code]
-urban = nc_file.variables[stash_code][-1, :, :] + nc_file.variables[stash_code][-2, :, :]
+nc_file_300 = nc.Dataset(nc_file_path_300)
+urban_300 = nc_file_300.variables[stash_code][-1, :, :] + nc_file_300.variables[stash_code][-2, :, :]
+
+nc_file_ukv = nc.Dataset(nc_file_path_ukv)
+urban_ukv = nc_file_ukv.variables[stash_code][-1, :, :] + nc_file_ukv.variables[stash_code][-2, :, :]
 
 
 print('end')
 
-# plot in read world coords
-fig = plt.figure(figsize=(10, 10))
-# ax = fig.add_subplot(111, projection=ccrs.PlateCarree())
-ax = fig.add_subplot(111, projection=ccrs.epsg(32631))
 
-im = ax.pcolormesh(proj_x,
-                   proj_y,
-                   urban,
-                   transform=cs_nat_cart,
+
+fig = plt.figure(figsize=(20,7))
+ax = fig.add_subplot(131)
+im = ax.pcolormesh(proj_x_100,
+                   proj_y_100,
+                   urban_100,
+                   vmin=0,
+                   vmax=1,
                    cmap='jet')
+
+
+
+ax2 = fig.add_subplot(132)
+im2 = ax2.pcolormesh(proj_x_300,
+                   proj_y_300,
+                   urban_300,
+                     vmin=0,
+                     vmax=1,
+                   cmap='jet')
+
+
+ax3 = fig.add_subplot(133)
+im3 = ax3.pcolormesh(proj_x_ukv,
+                   proj_y_ukv,
+                   urban_ukv,
+                     vmin=0,
+                     vmax=1,
+                   cmap='jet')
+
+
+ax.set_xticklabels([])
+ax.set_yticklabels([])
+ax2.set_xticklabels([])
+ax2.set_yticklabels([])
+ax3.set_xticklabels([])
+ax3.set_yticklabels([])
+
+plt.subplots_adjust(wspace=0, hspace=0)
 
 print('end')
