@@ -6,18 +6,29 @@ import iris
 # Actual version of this script is on the RACC
 
 # model = '100m'
-model = '300m'
-# model = 'ukv'
+# model = '300m'
+model = 'ukv'
 
 run = '20160512T1200Z'
 
 # main_dir = '/storage/basic/micromet/Tier_processing/rv006011/UM100/'
-main_dir = "//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/"
+# main_dir = "//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/"
+main_dir = "//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/landuse/maggie_new/"
 
-# pp_dir = main_dir + 'pp/' + run + '/' + model + '/'
-pp_dir = main_dir + 'UM100_ancillaries/london_' + model + '/'
+if model == 'ukv':
 
-netcdf_dir = main_dir + 'netcdf/' + run + '/UM' + model.split('m')[0] + '_ancillaries/'
+    pp_dir = main_dir
+
+    netcdf_dir = "//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/netcdf/" + run + '/UM' + model + '_ancillaries/'
+
+
+else:
+
+
+    # pp_dir = main_dir + 'pp/' + run + '/' + model + '/'
+    pp_dir = main_dir + 'UM100_ancillaries/london_' + model + '/'
+
+    netcdf_dir = main_dir + 'netcdf/' + run + '/UM' + model.split('m')[0] + '_ancillaries/'
 
 # check if the write out dir exists
 if os.path.isdir(netcdf_dir) == False:
