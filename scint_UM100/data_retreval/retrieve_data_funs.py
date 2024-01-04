@@ -84,6 +84,66 @@ def grab_model_altitude(model,
     return altitude
 
 
+def save_model_stash_to_csv(model, target_hour, variable_name, grid_nums, grid_vals, grid_levels,
+                            main_dir='D:/Documents/scint_UM100/scint_UM100/data_retreval/stash_data/'):
+    """
+
+    :return:
+    """
+
+    # form a df
+    # create the dataframe
+    dict = {'grid': grid_nums, 'level_IND': grid_levels, variable_name: grid_vals}
+    df = pd.DataFrame.from_dict(dict)
+    df.index = df.grid
+    df = df.drop(columns=['grid'])
+
+    # form csv filename
+    filename = 'stash_data_' + model + '_' + str(target_hour).zfill(2) + '.csv'
+    filepath = main_dir + filename
+
+    # check to see if this file already exists
+    if os.path.isfile(filepath):
+
+        # read in the df
+        existing_df = pd.read_csv(filepath)
+        existing_df.index = existing_df.grid
+        existing_df = existing_df.drop(columns=['grid'])
+
+        # check if index matches
+        if (df.index == existing_df.index).all():
+            pass
+        else:
+            print('end')
+
+        # check if level indexes match
+        if (df.level_IND == existing_df.level_IND).all():
+            pass
+        else:
+            print('end')
+
+        # check if the stash code already exists
+        if variable_name in existing_df.columns:
+            if (df[variable_name] == existing_df[variable_name]).all():
+                pass
+            else:
+                print('end')
+
+        else:
+            # add the new stash as a column
+            existing_df[variable_name] = df[variable_name]
+
+            # then save
+            existing_df.to_csv(filepath)
+
+    else:
+
+        # save
+        df.to_csv(filepath)
+
+    print('end')
+
+
 # threshold plots
 # add into loop of hour
 """

@@ -25,8 +25,10 @@ target_DOY = 2016134
 # target_hours = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
 target_hours = [12]
 
-variable_name = 'upward_heat_flux_in_air'
+# variable_name = 'upward_heat_flux_in_air'
 # variable_name = 'upward_air_velocity'
+variable_name = 'air_temperature'
+
 # model = '100m'
 model = '300m'
 # model = 'ukv'
@@ -281,6 +283,10 @@ for target_hour in target_hours:
     a = np.full((array_size_i, array_size_j), np.nan)
     sa_a = np.full((array_size_i, array_size_j), np.nan)
 
+    grid_nums = []
+    grid_vals = []
+    grid_levels = []
+
     # lats
     for i in range(0, array_size_i):
         # lons
@@ -295,6 +301,10 @@ for target_hour in target_hours:
 
                 a[i, j] = var_array[height_index, i, j]
 
+                grid_nums.append(int(target_grid_coords.loc[target_grid_coords['ind_tuples'] == (i, j)].grid))
+                grid_vals.append(var_array[height_index, i, j])
+                grid_levels.append(height_index)
+
                 sa_val = float(
                     target_grid_coords.loc[target_grid_coords['ind_tuples'] == (i, j)][str(target_hour).zfill(2)])
                 sa_a[i, j] = sa_val
@@ -304,11 +314,14 @@ for target_hour in target_hours:
     else:
         print('end')
 
-    # save a CSV here!
+    # save to a CSV here!
+    retrieve_data_funs.save_model_stash_to_csv(model, target_hour, variable_name, grid_nums, grid_vals, grid_levels)
 
-    weighted_a = (sa_a / np.nansum(sa_a)) * a
-    weighted_av_a = np.nansum(weighted_a)
-    a_weighted_percent = (weighted_a / np.nansum(weighted_a)) * 100
+    if variable_name == 'upward_heat_flux_in_air':
+        # ToDo: I probably want to save these values somewhere?
+        weighted_a = (sa_a / np.nansum(sa_a)) * a
+        weighted_av_a = np.nansum(weighted_a)
+        a_weighted_percent = (weighted_a / np.nansum(weighted_a)) * 100
 
     print('end')
 
