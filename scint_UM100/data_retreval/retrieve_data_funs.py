@@ -1,7 +1,10 @@
 import numpy as np
 import datetime as dt
+import os
+import pandas as pd
 
 from model_eval_tools.retrieve_UKV import read_premade_model_files
+from scint_flux import look_up
 
 
 def handle_time(nc_file):
@@ -39,3 +42,24 @@ def merge(list1, list2):
     """
     merged_list = [(list1[i], list2[i]) for i in range(0, len(list1))]
     return merged_list
+
+
+def grab_obs_z_f_vals(target_DOY, target_hour, path,
+                      main_dir='D:/Documents/scint_UM100/scint_UM100/data_retreval/z_f_csvs/'):
+    """
+
+    :return:
+    """
+
+    path_num = dict((v, k) for k, v in look_up.scint_path_numbers.items())[path]
+
+    file_name = 'z_f_' + str(path_num) + '_' + str(target_DOY) + '.csv'
+    file_path = main_dir + file_name
+    assert os.path.isfile(file_path)
+
+    # pandas read file
+    df = pd.read_csv(file_path)
+    df.index = pd.to_datetime(df['time'], format='%Y-%m-%d %H:%M:%S')
+    z_f = df.iloc[np.where(df.index.hour == target_hour)[0][0]].z_f
+
+    return z_f

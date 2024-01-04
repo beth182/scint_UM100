@@ -20,20 +20,24 @@ from scint_UM100.data_retreval import retrieve_data_funs
 
 # user inputs
 path = 'BCT_IMU'
-target_DOY = 134
+target_DOY = 2016134
 
-# target_hour = 12
-# target_hour = 6
+
 
 # target_hours = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
 target_hours = [12]
 
-variable_name = 'upward_heat_flux_in_air'
+# variable_name = 'upward_heat_flux_in_air'
+variable_name = 'upward_air_velocity'
 # model = '100m'
 model = '300m'
 # model = 'ukv'
 
-run = '20160512T1200Z'
+if target_DOY == 2016134:
+    run = '20160512T1200Z'
+else:
+    assert TypeError('Run cannot be done for this day')
+
 levels = True
 
 # threshold_value = 1.0
@@ -45,7 +49,7 @@ if levels == True:
 else:
     target_filetype = 'pvera'
 
-csv_name = path + '_' + str(target_DOY).zfill(3) + '_UM100_QH_' + model + '.csv'
+csv_name = path + '_' + str(target_DOY)[-3:].zfill(3) + '_UM100_QH_' + model + '.csv'
 csv_path = os.getcwd().replace('\\', '/') + '/' + csv_name
 
 # check to see if the index exists
@@ -68,6 +72,11 @@ for target_hour in target_hours:
     else:
         pass
 
+    # find the effective measurement height of the observation for this hour
+    # z_f csvs are screated within scint_fp package
+    z_f = retrieve_data_funs.grab_obs_z_f_vals(target_DOY, target_hour, path)
+
+    # Model files
     # first ouput timestamp is 1300 on the day before (DOY 133). So add 11 hours to get to midnight of target day (134)
     file_index_hour = 11 + target_hour
 
@@ -90,7 +99,7 @@ for target_hour in target_hours:
     # checks that this is the correct hour
     run_times = retrieve_data_funs.handle_time(nc_file)
     assert run_times[0].hour == target_hour
-    assert run_times[0].strftime('%j') == str(target_DOY)
+    assert run_times[0].strftime('%j') == str(target_DOY)[-3:]
 
     # look up grids for this hour
     # sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/SA_UM100_grid_percentages.csv'
