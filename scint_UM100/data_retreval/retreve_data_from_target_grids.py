@@ -22,13 +22,11 @@ from scint_UM100.data_retreval import retrieve_data_funs
 path = 'BCT_IMU'
 target_DOY = 2016134
 
-
-
 # target_hours = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
 target_hours = [12]
 
-# variable_name = 'upward_heat_flux_in_air'
-variable_name = 'upward_air_velocity'
+variable_name = 'upward_heat_flux_in_air'
+# variable_name = 'upward_air_velocity'
 # model = '100m'
 model = '300m'
 # model = 'ukv'
@@ -94,8 +92,6 @@ for target_hour in target_hours:
     # read model file
     nc_file = nc.Dataset(target_file_path)
 
-    print('end')
-
     # checks that this is the correct hour
     run_times = retrieve_data_funs.handle_time(nc_file)
     assert run_times[0].hour == target_hour
@@ -104,7 +100,8 @@ for target_hour in target_hours:
     # look up grids for this hour
     # sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/SA_UM100_grid_percentages.csv'
     # sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/' + path + '_SA_UM100_grid_percentages.csv'
-    sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/' + path + '_SA_UM' + model.split('m')[0] + '_grid_percentages.csv'
+    sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/' + path + '_SA_UM' + \
+                          model.split('m')[0] + '_grid_percentages.csv'
 
     sa_grids_df = pd.read_csv(sa_grids_lookup_csv)
 
@@ -123,8 +120,6 @@ for target_hour in target_hours:
         print('end')
 
     target_grid_list = hour_grid_df.index.to_list()
-
-    print('end')
 
     # look up the coords of these grids from the coord lookup
     coord_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/grid_coord_lookup/grid_coords_' + model + '.csv'
@@ -146,14 +141,13 @@ for target_hour in target_hours:
     # combine SA weight and coord df
     target_grid_coords = target_grid_coords.join(sa_grids_df, on='grid')
 
-    print('end')
-
     # temp read in cube
-
     if model == 'ukv':
-        pp_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/pp/20160512T1200Z/' + model.split('m')[0] + '/umnsaa_pexptb023.pp'
+        pp_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/pp/20160512T1200Z/' + \
+                       model.split('m')[0] + '/umnsaa_pexptb023.pp'
     else:
-        pp_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/pp/20160512T1200Z/' + model.split('m')[0] + 'm/umnsaa_pexptb023.pp'
+        pp_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/pp/20160512T1200Z/' + \
+                       model.split('m')[0] + 'm/umnsaa_pexptb023.pp'
 
     assert os.path.isfile(pp_file_path)
 
@@ -173,8 +167,14 @@ for target_hour in target_hours:
 
     tuple_list = []
 
+    altitude_list = []
+
     for index, row in target_grid_coords.iterrows():
+
         print(index)
+
+        # Look up the altitude
+        altitude = retrieve_data_funs.grab_model_altitude(model, row.grid)
 
         # get coord
         x = row.x
@@ -229,6 +229,8 @@ for target_hour in target_hours:
         else:
             pass
 
+        altitude_list.append(altitude)
+
         lat_inds.append(nearest_lat)
         lon_inds.append(nearest_lon)
 
@@ -244,26 +246,36 @@ for target_hour in target_hours:
 
     lat_lon_tuples = retrieve_data_funs.merge(lat_inds, lon_inds)
 
-    print('end')
-
+    target_grid_coords['altitudes'] = altitude_list
     target_grid_coords['lat_inds'] = lat_inds
     target_grid_coords['lon_inds'] = lon_inds
     target_grid_coords['ind_tuples'] = lat_lon_tuples
 
-    var_array = nc_file.variables[variable_name][0, :, :]
+    var_array = nc_file.variables[variable_name][:]
+
+    if levels == True:
+        i_ind = 1
+        j_ind = 2
+    else:
+        i_ind = 0
+        j_ind = 1
 
     # check if the model domain is a square
 
     if model == 'ukv':
-        array_size_i = var_array.shape[0]
-        array_size_j = var_array.shape[1]
+        array_size_i = var_array.shape[i_ind]
+        array_size_j = var_array.shape[j_ind]
 
     else:
         assert latitudes.shape[0] == longitudes.shape[0]
-        assert var_array.shape[0] == var_array.shape[1]
+        assert var_array.shape[i_ind] == var_array.shape[j_ind]
 
-        array_size_i = var_array.shape[0]
-        array_size_j = var_array.shape[0]
+        array_size_i = var_array.shape[i_ind]
+        array_size_j = var_array.shape[i_ind]
+
+    # define level heights
+    # ToDo: this will break if Levels = False
+    model_level_heights = nc_file.variables['level_height'][:]
 
     # start with an array full of nans
     a = np.full((array_size_i, array_size_j), np.nan)
@@ -274,9 +286,17 @@ for target_hour in target_hours:
         # lons
         for j in range(0, array_size_j):
             if (i, j) in lat_lon_tuples:
-                a[i, j] = var_array[i, j]
+                # match the model heights
+                # get altitude for this grid
+                grid_altitude = target_grid_coords.loc[target_grid_coords['ind_tuples'] == (i, j)].altitudes
+                model_heights = model_level_heights + float(grid_altitude)
 
-                sa_val = float(target_grid_coords.loc[target_grid_coords['ind_tuples'] == (i, j)][str(target_hour).zfill(2)])
+                height_index = np.abs(model_heights - z_f).argmin()
+
+                a[i, j] = var_array[height_index, i, j]
+
+                sa_val = float(
+                    target_grid_coords.loc[target_grid_coords['ind_tuples'] == (i, j)][str(target_hour).zfill(2)])
                 sa_a[i, j] = sa_val
 
     if np.isclose(100, np.nansum(sa_a)):
@@ -284,151 +304,12 @@ for target_hour in target_hours:
     else:
         print('end')
 
+    # save a CSV here!
+
     weighted_a = (sa_a / np.nansum(sa_a)) * a
     weighted_av_a = np.nansum(weighted_a)
     a_weighted_percent = (weighted_a / np.nansum(weighted_a)) * 100
 
-    threshold_list = np.arange(0.0001, 1, 0.0001).tolist()
-
-    w_av_threshold_list = []
-    len_grids_threshold_list = []
-
-    print(' ')
-    for i in threshold_list:
-        print(i)
-
-        # loop through different thresholds
-        temp_sa = np.ma.masked_where(sa_a <= i, sa_a)
-        temp_a = np.ma.masked_where(sa_a <= i, a)
-
-        weighted_temp_a = (temp_sa / np.nansum(temp_sa)) * temp_a
-
-        weighted_av_temp_a = np.nansum(weighted_temp_a)
-        w_av_threshold_list.append(weighted_av_temp_a)
-
-        len_grids_temp = temp_sa.count() + np.count_nonzero(~np.isnan(temp_a.data)) - np.count_nonzero(
-            ~np.isnan(temp_a.mask))
-        len_grids_threshold_list.append(len_grids_temp)
-
-    """
-
-    fig, ax1 = plt.subplots(figsize=(10,6))
-    ax2 = ax1.twinx()
-
-    plt.title(str(target_DOY) + ' ' + str(target_hour).zfill(2))
-
-    ax1.scatter(threshold_list, w_av_threshold_list, c='r', marker='.')
-
-    ax1.set_ylabel('Weighted Average UM100 $Q_{H}$ ($W$ $m^{2}$)')
-
-    ax2.set_ylabel('# of UM100 grids')
-
-    ax1.set_xlabel('SA Weight Threshold')
-
-    ax2.spines['left'].set_color('r')
-
-    ax2.spines['right'].set_color('b')
-
-    ax2.tick_params(which='both', color='blue')
-    ax1.tick_params(axis='y', which='both', color='red')
-    ax1.yaxis.label.set_color('r')
-    ax2.yaxis.label.set_color('b')
-
-    ax1.tick_params(axis='y', colors='r')
-    ax2.tick_params(axis='y', colors='b')
-
-    ax2.scatter(threshold_list, len_grids_threshold_list, c='b', marker='.')
-
-    current_path = os.getcwd().replace('\\', '/') + '/plots/changing_thresholds/' + model + '/'
-    plt.savefig(current_path + path + '_' + str(target_hour).zfill(2) + '.png', layout='tight', dpi=300)
-
-    """
-
     print('end')
 
-
-
 print('end')
-
-"""
-plt.figure()
-plt.title('UM100 $Q_H$')
-# plt.imshow(a, vmin=150, vmax=500)
-plt.imshow(a)
-plt.colorbar()
-plt.xlim(390, 420)
-plt.ylim(445, 400)
-
-plt.figure()
-plt.title('UM100 Grid: SA %')
-plt.imshow(sa_a)
-plt.colorbar()
-plt.xlim(390, 420)
-plt.ylim(445, 400)
-
-sa_a_norm = (sa_a - np.nanmin(sa_a)) / (np.nanmax(sa_a) - np.nanmin(sa_a))
-sa_a_norm[np.isnan(sa_a_norm)] = 0
-
-plt.figure()
-plt.title('weighted UM100 $Q_H$')
-# plt.imshow(a, alpha=sa_a_norm, vmin=150, vmax=500)
-plt.imshow(a, alpha=sa_a_norm)
-plt.colorbar()
-plt.xlim(390, 420)
-plt.ylim(445, 400)
-plt.annotate(str(round(weighted_av_a, 1)), xy=(0.05, 0.95), xycoords='axes fraction')
-"""
-
-# no map no alpha real world coords
-
-"""
-
-# plot the data in real world coords
-# from stackoverflow issue: https://stackoverflow.com/questions/62346854/how-to-convert-projection-x-and-y-coordinate-in-netcdf-iris-cube-to-lat-lon
-fig = plt.figure(figsize=(10, 10))
-
-ax = fig.add_subplot(111, projection=ccrs.epsg(32631))
-
-# open SA file
-sa_file = 'D:/Documents/scint_UM100/scint_UM100/SA_134/BCT_IMU_15000_2016_134_' + str(target_hour).zfill(2) + '_00.tif'
-raster = rasterio.open(sa_file)
-raster_array = raster.read()
-# make all 0 vals in array nan
-raster_array[raster_array == 0.0] = np.nan
-# force non-zero vals to be 1
-bool_arr = np.ones(raster_array.shape)
-# remove nans in bool array
-nan_index = np.where(np.isnan(raster_array))
-bool_arr[nan_index] = 0.0
-
-rasterio.plot.show(bool_arr, contour=True, transform=raster.transform, contour_label_kws={}, ax=ax, zorder=10)
-
-grid_dir = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/grid_coord_lookup/grid_polygons/UM' + model.split('m')[0] + '_shapes/'
-for grid in target_grid_coords.grid.to_list():
-    grid_file_path = grid_dir + str(int(grid)) + '.gpkg'
-    
-    
-    if os.path.isfile(grid_file_path):
-        pass
-    else:
-        print(grid_file_path)
-        
-    grid_gpkg = geopandas.read_file(grid_file_path)
-    grid_gpkg.boundary.plot(ax=ax, color='skyblue')
-
-
-
-# get UM coords
-proj_x = cube.coord("grid_longitude").points
-proj_y = cube.coord("grid_latitude").points
-
-# get UM coord systems
-cs_nat = cube.coord_system()
-cs_nat_cart = cs_nat.as_cartopy_projection()
-
-im = ax.pcolormesh(proj_x,
-                   proj_y,
-                   a,
-                   transform=cs_nat_cart,
-                   cmap='jet')
-"""
