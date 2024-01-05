@@ -27,7 +27,8 @@ target_hours = [12]
 
 # variable_name = 'upward_heat_flux_in_air'
 # variable_name = 'upward_air_velocity'
-variable_name = 'air_temperature'
+# variable_name = 'air_temperature'
+variable_name = 'm01s00i253'
 
 # model = '100m'
 model = '300m'
