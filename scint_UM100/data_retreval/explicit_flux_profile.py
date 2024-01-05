@@ -299,9 +299,8 @@ for target_hour in target_hours:
     # parameterized flux
     parameterized = np.array(QH_grid_arrays).mean(axis=0)
 
-    radius_of_earth = 6378100
     rho_grid_av = np.array(rho_grid_arrays).mean(axis=0)
-    rho = rho_grid_av / (radius_of_earth + z_f) ** 2
+    rho = rho_grid_av / (constants.radius_of_earth + z_f) ** 2
 
     rho_cp = constants.cp * rho
 
