@@ -125,10 +125,10 @@ def grab_model_data(path, target_DOY, target_hour, model,
     # temp read in cube
     if model == 'ukv':
         pp_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/pp/20160512T1200Z/' + \
-                       model.split('m')[0] + '/umnsaa_pexptb023.pp'
+                       model.split('m')[0] + '/umnsaa_pexptb' + str(file_index_hour).zfill(3) + '.pp'
     else:
         pp_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/pp/20160512T1200Z/' + \
-                       model.split('m')[0] + 'm/umnsaa_pexptb023.pp'
+                       model.split('m')[0] + 'm/umnsaa_pexptb' + str(file_index_hour).zfill(3) +'.pp'
 
     assert os.path.isfile(pp_file_path)
 
