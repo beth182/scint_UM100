@@ -124,7 +124,7 @@ def save_model_stash_to_csv(model, target_hour, variable_name, grid_nums, grid_v
 
         # check if the stash code already exists
         if variable_name in existing_df.columns:
-            if (df[variable_name] == existing_df[variable_name]).all():
+            if np.isclose(df[variable_name], existing_df[variable_name]).all():
                 pass
             else:
                 print('end')
