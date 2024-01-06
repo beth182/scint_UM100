@@ -47,13 +47,8 @@ if __name__ == '__main__':
     # target_hours = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
     target_hours = [12]
 
-    # variable_name = 'upward_heat_flux_in_air'
-    # variable_name = 'upward_air_velocity'
-    # variable_name = 'air_temperature'
-    # variable_name = 'm01s00i253'
-
-    # model = '100m'
-    model = '300m'
+    model = '100m'
+    # model = '300m'
     # model = 'ukv'
 
     run_all_grab(path, target_DOY, target_hours, model)

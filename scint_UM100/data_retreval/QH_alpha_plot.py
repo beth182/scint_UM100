@@ -88,14 +88,25 @@ def QH_alpha_plot(target_hour, model, path, target_grid_coords, target_grid_list
     sa_a_norm = (sa_a - np.nanmin(sa_a)) / (np.nanmax(sa_a) - np.nanmin(sa_a))
     sa_a_norm[np.isnan(sa_a_norm)] = 0
 
-    im = ax.pcolormesh(proj_x,
-                       proj_y,
-                       a,
-                       transform=cs_nat_cart,
-                       cmap='jet',
-                       alpha=sa_a_norm,
-                       vmin=150,
-                       vmax=500)
+    if target_hour == 12:
+
+        im = ax.pcolormesh(proj_x,
+                           proj_y,
+                           a,
+                           transform=cs_nat_cart,
+                           cmap='jet',
+                           alpha=sa_a_norm,
+                           vmin=60,
+                           vmax=425)
+
+    else:
+
+        im = ax.pcolormesh(proj_x,
+                           proj_y,
+                           a,
+                           transform=cs_nat_cart,
+                           cmap='jet',
+                           alpha=sa_a_norm)
 
     plt.colorbar(im, pad=0.01)
 
@@ -107,7 +118,5 @@ def QH_alpha_plot(target_hour, model, path, target_grid_coords, target_grid_list
 
     current_path = os.getcwd().replace('\\', '/') + '/plots/'
 
-    plt.savefig(current_path + model + '/' + path + '_' + str(target_hour).zfill(2) + '.png', bbox_inches='tight', dpi=300)
-
-
-
+    plt.savefig(current_path + model + '/' + path + '_' + str(target_hour).zfill(2) + '.png', bbox_inches='tight',
+                dpi=300)
