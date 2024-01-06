@@ -66,17 +66,7 @@ for target_hour in target_hours:
         existing_df = existing_df.drop(columns=['hour'])
 
         if target_hour in existing_df.index:
-
             continue
-            # print('end')
-
-
-            # HERE CHECK FOR TOTAL FLUX
-
-
-
-
-
 
         else:
             pass
@@ -330,15 +320,35 @@ for target_hour in target_hours:
 
     if variable_name == 'upward_heat_flux_in_air':
 
-        weighted_a = (sa_a / np.nansum(sa_a)) * a
+        # read the explicit flux
+        explicit_dir = 'D:/Documents/scint_UM100/scint_UM100/data_retreval/stash_data/'
+        explicit_filename = 'stash_data_' + model + '_' + str(target_hour) + '.csv'
+        explicit_filepath = explicit_dir + explicit_filename
+        assert os.path.isfile(explicit_filepath)
+
+        # read file
+        explicit_df = pd.read_csv(explicit_filepath)
+        # make sure total flux is a column
+        if 'total_flux' in explicit_df.columns:
+            pass
+        else:
+            raise ValueError('need to run csv_explicit_flux.py first to add total flux col to df')
+
+        explicit_flux = explicit_df.total_flux - explicit_df.upward_heat_flux_in_air
+
+        # make sure they're all the same val
+        assert np.isclose(explicit_flux[0], explicit_flux).all()
+        explicit_val = explicit_flux[0]
+
+        total_flux_a = a + explicit_val
+        weighted_a = (sa_a / np.nansum(sa_a)) * total_flux_a
         weighted_av_a = np.nansum(weighted_a)
         a_weighted_percent = (weighted_a / np.nansum(weighted_a)) * 100
 
-
-
         # create or write to csv file of weighted average values
-        out_df = pd.DataFrame({'hour': [target_hour], 'weighted_av_a': [weighted_av_a], 'av_a': [np.nanmean(a)],
-                               'len_grids': [len(target_grid_list)]})
+        out_df = pd.DataFrame(
+            {'hour': [target_hour], 'weighted_av_a': [weighted_av_a], 'av_a': [np.nanmean(total_flux_a)],
+             'len_grids': [len(target_grid_list)], 'explicit': [explicit_val]})
         out_df.index = out_df.hour
         out_df = out_df.drop(columns=['hour'])
 
@@ -356,14 +366,11 @@ for target_hour in target_hours:
         else:
             out_df.to_csv(csv_path)
 
-
         # alpha plot
-        QH_alpha_plot.QH_alpha_plot(target_hour, model, path, target_grid_coords, target_grid_list, cube, sa_a, a,
+        QH_alpha_plot.QH_alpha_plot(target_hour, model, path, target_grid_coords, target_grid_list, cube, sa_a,
+                                    total_flux_a,
                                     weighted_av_a)
 
     print('end')
-
-
-
 
 print('end')
