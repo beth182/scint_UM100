@@ -17,6 +17,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 from scint_UM100.data_retreval import retrieve_data_funs
+from scint_UM100.data_retreval import QH_alpha_plot
 
 # user inputs
 path = 'BCT_IMU'
@@ -25,10 +26,10 @@ target_DOY = 2016134
 # target_hours = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
 target_hours = [12]
 
-# variable_name = 'upward_heat_flux_in_air'
+variable_name = 'upward_heat_flux_in_air'
 # variable_name = 'upward_air_velocity'
 # variable_name = 'air_temperature'
-variable_name = 'm01s00i253'
+# variable_name = 'm01s00i253'
 
 # model = '100m'
 model = '300m'
@@ -68,6 +69,15 @@ for target_hour in target_hours:
 
             continue
             # print('end')
+
+
+            # HERE CHECK FOR TOTAL FLUX
+
+
+
+
+
+
         else:
             pass
     else:
@@ -319,11 +329,41 @@ for target_hour in target_hours:
     retrieve_data_funs.save_model_stash_to_csv(model, target_hour, variable_name, grid_nums, grid_vals, grid_levels)
 
     if variable_name == 'upward_heat_flux_in_air':
-        # ToDo: I probably want to save these values somewhere?
+
         weighted_a = (sa_a / np.nansum(sa_a)) * a
         weighted_av_a = np.nansum(weighted_a)
         a_weighted_percent = (weighted_a / np.nansum(weighted_a)) * 100
 
+
+
+        # create or write to csv file of weighted average values
+        out_df = pd.DataFrame({'hour': [target_hour], 'weighted_av_a': [weighted_av_a], 'av_a': [np.nanmean(a)],
+                               'len_grids': [len(target_grid_list)]})
+        out_df.index = out_df.hour
+        out_df = out_df.drop(columns=['hour'])
+
+        if os.path.isfile(csv_path):
+
+            existing_df = pd.read_csv(csv_path)
+
+            existing_df.index = existing_df.hour
+            existing_df = existing_df.drop(columns=['hour'])
+
+            new_df = pd.concat([existing_df, out_df])
+            new_df.to_csv(csv_path)
+
+
+        else:
+            out_df.to_csv(csv_path)
+
+
+        # alpha plot
+        QH_alpha_plot.QH_alpha_plot(target_hour, model, path, target_grid_coords, target_grid_list, cube, sa_a, a,
+                                    weighted_av_a)
+
     print('end')
+
+
+
 
 print('end')
