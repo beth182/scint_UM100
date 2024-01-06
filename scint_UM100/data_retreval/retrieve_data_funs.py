@@ -84,7 +84,8 @@ def grab_model_altitude(model,
     return altitude
 
 
-def save_model_stash_to_csv(model, target_hour, variable_name, grid_nums, grid_vals, grid_levels,
+def save_model_stash_to_csv(model, target_hour, grid_nums, grid_vals_QH, grid_vals_W, grid_vals_T, grid_vals_rho,
+                            grid_levels,
                             main_dir='D:/Documents/scint_UM100/scint_UM100/data_retreval/stash_data/'):
     """
 
@@ -93,7 +94,9 @@ def save_model_stash_to_csv(model, target_hour, variable_name, grid_nums, grid_v
 
     # form a df
     # create the dataframe
-    dict = {'grid': grid_nums, 'level_IND': grid_levels, variable_name: grid_vals}
+    dict = {'grid': grid_nums, 'level_IND': grid_levels, 'upward_heat_flux_in_air': grid_vals_QH,
+            'upward_air_velocity': grid_vals_W, 'air_temperature': grid_vals_T, 'm01s00i253': grid_vals_rho}
+
     df = pd.DataFrame.from_dict(dict)
     df.index = df.grid
     df = df.drop(columns=['grid'])
@@ -123,21 +126,15 @@ def save_model_stash_to_csv(model, target_hour, variable_name, grid_nums, grid_v
             print('end')
 
         # check if the stash code already exists
-        if variable_name in existing_df.columns:
-            if np.isclose(df[variable_name], existing_df[variable_name]).all():
-                pass
-            else:
-                print('end')
-
+        if np.isclose(df['upward_heat_flux_in_air'], existing_df['upward_heat_flux_in_air']).all():
+            pass
         else:
-            # add the new stash as a column
-            existing_df[variable_name] = df[variable_name]
+            print('end')
 
-            # then save
-            existing_df.to_csv(filepath)
+        # then save
+        existing_df.to_csv(filepath)
 
     else:
-
         # save
         df.to_csv(filepath)
 

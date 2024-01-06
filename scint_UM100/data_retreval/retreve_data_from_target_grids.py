@@ -18,60 +18,38 @@ warnings.filterwarnings("ignore")
 
 from scint_UM100.data_retreval import retrieve_data_funs
 from scint_UM100.data_retreval import QH_alpha_plot
-
-# user inputs
-path = 'BCT_IMU'
-target_DOY = 2016134
-
-# target_hours = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
-target_hours = [12]
-
-variable_name = 'upward_heat_flux_in_air'
-# variable_name = 'upward_air_velocity'
-# variable_name = 'air_temperature'
-# variable_name = 'm01s00i253'
-
-# model = '100m'
-model = '300m'
-# model = 'ukv'
-
-if target_DOY == 2016134:
-    run = '20160512T1200Z'
-else:
-    assert TypeError('Run cannot be done for this day')
-
-levels = True
-
-# threshold_value = 1.0
-threshold_value = 0.0
-
-# ToDo: move this to a lookup
-if levels == True:
-    target_filetype = 'pexptb'
-else:
-    target_filetype = 'pvera'
-
-csv_name = path + '_' + str(target_DOY)[-3:].zfill(3) + '_UM100_QH_' + model + '.csv'
-csv_path = os.getcwd().replace('\\', '/') + '/' + csv_name
-
-# check to see if the index exists
+from scint_UM100.data_retreval import csv_explicit_flux
 
 
-for target_hour in target_hours:
+def grab_model_data(path, target_DOY, target_hour, model,
+                    levels=True):
+    """
 
-    if os.path.isfile(csv_path):
-        existing_df = pd.read_csv(csv_path)
+    :param path:
+    :param target_DOY:
+    :param target_hours:
+    :param variable_name:
+    :param model:
+    :param levels:
+    :return:
+    """
 
-        existing_df.index = existing_df.hour
-        existing_df = existing_df.drop(columns=['hour'])
-
-        if target_hour in existing_df.index:
-            continue
-
-        else:
-            pass
+    if target_DOY == 2016134:
+        run = '20160512T1200Z'
     else:
-        pass
+        assert TypeError('Run cannot be done for this day')
+
+    # threshold_value = 1.0
+    threshold_value = 0.0
+
+    # ToDo: move this to a lookup
+    if levels == True:
+        target_filetype = 'pexptb'
+    else:
+        target_filetype = 'pvera'
+
+    csv_name = path + '_' + str(target_DOY)[-3:].zfill(3) + '_UM100_QH_' + model + '.csv'
+    csv_path = os.getcwd().replace('\\', '/') + '/' + csv_name
 
     # find the effective measurement height of the observation for this hour
     # z_f csvs are screated within scint_fp package
@@ -155,7 +133,7 @@ for target_hour in target_hours:
     assert os.path.isfile(pp_file_path)
 
     # takes a long time
-    cube = iris.load(pp_file_path, variable_name)[0]
+    cube = iris.load(pp_file_path, 'upward_heat_flux_in_air')[0]
 
     rot_pole = cube.coord('grid_latitude').coord_system.as_cartopy_crs()
 
@@ -254,7 +232,10 @@ for target_hour in target_hours:
     target_grid_coords['lon_inds'] = lon_inds
     target_grid_coords['ind_tuples'] = lat_lon_tuples
 
-    var_array = nc_file.variables[variable_name][:]
+    QH_array = nc_file.variables['upward_heat_flux_in_air'][:]
+    W_array = nc_file.variables['upward_air_velocity'][:]
+    T_array = nc_file.variables['air_temperature'][:]
+    rho_array = nc_file.variables['m01s00i253'][:]
 
     if levels == True:
         i_ind = 1
@@ -266,15 +247,15 @@ for target_hour in target_hours:
     # check if the model domain is a square
 
     if model == 'ukv':
-        array_size_i = var_array.shape[i_ind]
-        array_size_j = var_array.shape[j_ind]
+        array_size_i = QH_array.shape[i_ind]
+        array_size_j = QH_array.shape[j_ind]
 
     else:
         assert latitudes.shape[0] == longitudes.shape[0]
-        assert var_array.shape[i_ind] == var_array.shape[j_ind]
+        assert QH_array.shape[i_ind] == QH_array.shape[j_ind]
 
-        array_size_i = var_array.shape[i_ind]
-        array_size_j = var_array.shape[i_ind]
+        array_size_i = QH_array.shape[i_ind]
+        array_size_j = QH_array.shape[i_ind]
 
     # define level heights
     # ToDo: this will break if Levels = False
@@ -282,11 +263,16 @@ for target_hour in target_hours:
 
     # start with an array full of nans
     a = np.full((array_size_i, array_size_j), np.nan)
+
     sa_a = np.full((array_size_i, array_size_j), np.nan)
 
     grid_nums = []
-    grid_vals = []
     grid_levels = []
+
+    grid_vals_QH = []
+    grid_vals_W = []
+    grid_vals_T = []
+    grid_vals_rho = []
 
     # lats
     for i in range(0, array_size_i):
@@ -300,11 +286,15 @@ for target_hour in target_hours:
 
                 height_index = np.abs(model_heights - z_f).argmin()
 
-                a[i, j] = var_array[height_index, i, j]
+                a[i, j] = QH_array[height_index, i, j]
 
                 grid_nums.append(int(target_grid_coords.loc[target_grid_coords['ind_tuples'] == (i, j)].grid))
-                grid_vals.append(var_array[height_index, i, j])
                 grid_levels.append(height_index)
+
+                grid_vals_QH.append(QH_array[height_index, i, j])
+                grid_vals_W.append(W_array[height_index, i, j])
+                grid_vals_T.append(T_array[height_index, i, j])
+                grid_vals_rho.append(rho_array[height_index, i, j])
 
                 sa_val = float(
                     target_grid_coords.loc[target_grid_coords['ind_tuples'] == (i, j)][str(target_hour).zfill(2)])
@@ -316,61 +306,57 @@ for target_hour in target_hours:
         print('end')
 
     # save to a CSV here!
-    retrieve_data_funs.save_model_stash_to_csv(model, target_hour, variable_name, grid_nums, grid_vals, grid_levels)
+    retrieve_data_funs.save_model_stash_to_csv(model, target_hour, grid_nums, grid_vals_QH, grid_vals_W,
+                                               grid_vals_T, grid_vals_rho, grid_levels)
 
-    if variable_name == 'upward_heat_flux_in_air':
+    # read the explicit flux
+    explicit_dir = 'D:/Documents/scint_UM100/scint_UM100/data_retreval/stash_data/'
+    explicit_filename = 'stash_data_' + model + '_' + str(target_hour) + '.csv'
+    explicit_filepath = explicit_dir + explicit_filename
+    assert os.path.isfile(explicit_filepath)
 
-        # read the explicit flux
-        explicit_dir = 'D:/Documents/scint_UM100/scint_UM100/data_retreval/stash_data/'
-        explicit_filename = 'stash_data_' + model + '_' + str(target_hour) + '.csv'
-        explicit_filepath = explicit_dir + explicit_filename
-        assert os.path.isfile(explicit_filepath)
+    csv_explicit_flux.calculate_explicit_flux(model, target_hour, target_DOY, path)
 
-        # read file
-        explicit_df = pd.read_csv(explicit_filepath)
-        # make sure total flux is a column
-        if 'total_flux' in explicit_df.columns:
-            pass
-        else:
-            raise ValueError('need to run csv_explicit_flux.py first to add total flux col to df')
+    # read file
+    explicit_df = pd.read_csv(explicit_filepath)
+    # make sure total flux is a column
+    assert 'total_flux' in explicit_df.columns
+    explicit_flux = explicit_df.total_flux - explicit_df.upward_heat_flux_in_air
 
-        explicit_flux = explicit_df.total_flux - explicit_df.upward_heat_flux_in_air
+    # make sure they're all the same val
+    assert np.isclose(explicit_flux[0], explicit_flux).all()
+    explicit_val = explicit_flux[0]
 
-        # make sure they're all the same val
-        assert np.isclose(explicit_flux[0], explicit_flux).all()
-        explicit_val = explicit_flux[0]
+    total_flux_a = a + explicit_val
+    weighted_a = (sa_a / np.nansum(sa_a)) * total_flux_a
+    weighted_av_a = np.nansum(weighted_a)
+    a_weighted_percent = (weighted_a / np.nansum(weighted_a)) * 100
 
-        total_flux_a = a + explicit_val
-        weighted_a = (sa_a / np.nansum(sa_a)) * total_flux_a
-        weighted_av_a = np.nansum(weighted_a)
-        a_weighted_percent = (weighted_a / np.nansum(weighted_a)) * 100
+    # create or write to csv file of weighted average values
+    out_df = pd.DataFrame(
+        {'hour': [target_hour], 'weighted_av_a': [weighted_av_a],
+         'av_a': [np.nanmean(total_flux_a)], 'len_grids': [len(target_grid_list)], 'explicit': [explicit_val]})
 
-        # create or write to csv file of weighted average values
-        out_df = pd.DataFrame(
-            {'hour': [target_hour], 'weighted_av_a': [weighted_av_a], 'av_a': [np.nanmean(total_flux_a)],
-             'len_grids': [len(target_grid_list)], 'explicit': [explicit_val]})
-        out_df.index = out_df.hour
-        out_df = out_df.drop(columns=['hour'])
+    out_df.index = out_df.hour
+    out_df = out_df.drop(columns=['hour'])
 
-        if os.path.isfile(csv_path):
+    if os.path.isfile(csv_path):
 
-            existing_df = pd.read_csv(csv_path)
+        existing_df = pd.read_csv(csv_path)
 
-            existing_df.index = existing_df.hour
-            existing_df = existing_df.drop(columns=['hour'])
+        existing_df.index = existing_df.hour
+        existing_df = existing_df.drop(columns=['hour'])
 
-            new_df = pd.concat([existing_df, out_df])
-            new_df.to_csv(csv_path)
+        new_df = pd.concat([existing_df, out_df])
+        new_df.to_csv(csv_path)
 
 
-        else:
-            out_df.to_csv(csv_path)
+    else:
+        out_df.to_csv(csv_path)
 
-        # alpha plot
-        QH_alpha_plot.QH_alpha_plot(target_hour, model, path, target_grid_coords, target_grid_list, cube, sa_a,
-                                    total_flux_a,
-                                    weighted_av_a)
+    # alpha plot
+    QH_alpha_plot.QH_alpha_plot(target_hour, model, path, target_grid_coords, target_grid_list, cube, sa_a,
+                                total_flux_a,
+                                weighted_av_a)
 
     print('end')
-
-print('end')
