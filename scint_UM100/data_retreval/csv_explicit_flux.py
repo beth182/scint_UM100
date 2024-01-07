@@ -20,18 +20,23 @@ def calculate_explicit_flux(model, target_hour, target_DOY, path,
     existing_df.index = existing_df.grid
     existing_df = existing_df.drop(columns=['grid'])
 
-    # find the effective measurement height of the observation for this hour
-    # z_f csvs are screated within scint_fp package
-    z_f = retrieve_data_funs.grab_obs_z_f_vals(target_DOY, target_hour, path)
+    if model != 'ukv':
 
-    # calculate explicit flux
-    rho = (existing_df['m01s00i253'] / (constants.radius_of_earth + z_f) ** 2).mean()
+        # find the effective measurement height of the observation for this hour
+        # z_f csvs are screated within scint_fp package
+        z_f = retrieve_data_funs.grab_obs_z_f_vals(target_DOY, target_hour, path)
 
-    T_prime = existing_df.air_temperature.mean() - existing_df.air_temperature
-    W_prime = existing_df.upward_air_velocity.mean() - existing_df.upward_air_velocity
+        # calculate explicit flux
+        rho = (existing_df['m01s00i253'] / (constants.radius_of_earth + z_f) ** 2).mean()
 
-    T_prime_W_prime_av = (T_prime * W_prime).mean()
-    explicit = T_prime_W_prime_av * rho * constants.cp
+        T_prime = existing_df.air_temperature.mean() - existing_df.air_temperature
+        W_prime = existing_df.upward_air_velocity.mean() - existing_df.upward_air_velocity
+
+        T_prime_W_prime_av = (T_prime * W_prime).mean()
+        explicit = T_prime_W_prime_av * rho * constants.cp
+
+    else:
+        explicit = 0
 
     existing_df['total_flux'] = existing_df['upward_heat_flux_in_air'] + explicit
 

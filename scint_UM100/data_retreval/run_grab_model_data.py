@@ -27,6 +27,9 @@ def run_all_grab(path, target_DOY, target_hours, model):
             existing_df.index = existing_df.hour
             existing_df = existing_df.drop(columns=['hour'])
             if target_hour in existing_df.index:
+                print('Already done ', str(target_hour))
+                print(' ')
+
                 continue
             else:
                 pass
@@ -44,12 +47,12 @@ if __name__ == '__main__':
     path = 'BCT_IMU'
     target_DOY = 2016134
 
-    # target_hours = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
-    target_hours = [12]
+    target_hours = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+    # target_hours = [12]
 
-    model = '100m'
+    # model = '100m'
     # model = '300m'
-    # model = 'ukv'
+    model = 'ukv'
 
     run_all_grab(path, target_DOY, target_hours, model)
 

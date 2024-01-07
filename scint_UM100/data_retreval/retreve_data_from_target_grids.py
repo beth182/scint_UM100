@@ -93,12 +93,8 @@ def grab_model_data(path, target_DOY, target_hour, model,
     # select grids with values bigger than 0 for this time
     if model == '100m':
         hour_grid_df = sa_grids_df[sa_grids_df[str(target_hour)] > threshold_value]
-    elif model == '300m':
-        hour_grid_df = sa_grids_df[sa_grids_df[str(target_hour).zfill(2)] > threshold_value]
-    elif model == 'ukv':
-        hour_grid_df = sa_grids_df[sa_grids_df[str(target_hour).zfill(2)] > threshold_value]
     else:
-        print('end')
+        hour_grid_df = sa_grids_df[sa_grids_df[str(target_hour).zfill(2)] > threshold_value]
 
     target_grid_list = hour_grid_df.index.to_list()
 
@@ -155,7 +151,10 @@ def grab_model_data(path, target_DOY, target_hour, model,
         print(index)
 
         # Look up the altitude
-        altitude = retrieve_data_funs.grab_model_altitude(model, row.grid)
+        if model != 'ukv':
+            altitude = retrieve_data_funs.grab_model_altitude(model, row.grid)
+        else:
+            altitude = 0
 
         # get coord
         x = row.x
@@ -284,7 +283,10 @@ def grab_model_data(path, target_DOY, target_hour, model,
                 grid_altitude = target_grid_coords.loc[target_grid_coords['ind_tuples'] == (i, j)].altitudes
                 model_heights = model_level_heights + float(grid_altitude)
 
-                height_index = np.abs(model_heights - z_f).argmin()
+                if model != 'ukv':
+                    height_index = np.abs(model_heights - z_f).argmin()
+                else:
+                    height_index = 3
 
                 a[i, j] = QH_array[height_index, i, j]
 
@@ -296,11 +298,14 @@ def grab_model_data(path, target_DOY, target_hour, model,
                 grid_vals_T.append(T_array[height_index, i, j])
                 grid_vals_rho.append(rho_array[height_index, i, j])
 
-                sa_val = float(
-                    target_grid_coords.loc[target_grid_coords['ind_tuples'] == (i, j)][str(target_hour).zfill(2)])
+                if model == '100m':
+                    sa_val = float(target_grid_coords.loc[target_grid_coords['ind_tuples'] == (i, j)][str(target_hour)])
+                else:
+                    sa_val = float(target_grid_coords.loc[target_grid_coords['ind_tuples'] == (i, j)][str(target_hour).zfill(2)])
+
                 sa_a[i, j] = sa_val
 
-    if np.isclose(100, np.nansum(sa_a)):
+    if np.nansum(sa_a) > 99.99:
         pass
     else:
         print('end')
@@ -311,7 +316,7 @@ def grab_model_data(path, target_DOY, target_hour, model,
 
     # read the explicit flux
     explicit_dir = 'D:/Documents/scint_UM100/scint_UM100/data_retreval/stash_data/'
-    explicit_filename = 'stash_data_' + model + '_' + str(target_hour) + '.csv'
+    explicit_filename = 'stash_data_' + model + '_' + str(target_hour).zfill(2) + '.csv'
     explicit_filepath = explicit_dir + explicit_filename
     assert os.path.isfile(explicit_filepath)
 
@@ -360,3 +365,4 @@ def grab_model_data(path, target_DOY, target_hour, model,
                                 weighted_av_a)
 
     print('end')
+    print(' ')
