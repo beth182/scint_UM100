@@ -32,7 +32,6 @@ target_hours = [12]
 
 # model = '100m'
 model = '300m'
-# model = 'ukv'
 
 if target_DOY == 2016134:
     run = '20160512T1200Z'
