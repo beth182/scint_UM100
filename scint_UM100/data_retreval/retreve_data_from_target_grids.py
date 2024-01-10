@@ -2,11 +2,7 @@
 import os
 import netCDF4 as nc
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
-import rasterio.plot
-import geopandas
-import matplotlib.colors as colors
 
 import iris
 import cartopy.crs as ccrs
@@ -18,7 +14,7 @@ warnings.filterwarnings("ignore")
 
 from scint_UM100.data_retreval import retrieve_data_funs
 from scint_UM100.data_retreval import QH_alpha_plot
-from scint_UM100.data_retreval import csv_explicit_flux
+from scint_UM100.data_retreval.explicit_flux import csv_explicit_flux
 
 
 def grab_model_data(path, target_DOY, target_hour, model,

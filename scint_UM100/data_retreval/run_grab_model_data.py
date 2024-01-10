@@ -2,7 +2,6 @@ import os
 import pandas as pd
 
 from scint_UM100.data_retreval import retreve_data_from_target_grids
-from scint_UM100.data_retreval import csv_explicit_flux
 
 
 def run_all_grab(path, target_DOY, target_hours, model):
