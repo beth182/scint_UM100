@@ -10,16 +10,17 @@ import os
 from model_eval_tools.retrieve_UKV import read_premade_model_files
 
 # user choices
-# model = '100m'
+model = '100m'
 # model = '300m'
-model = 'ukv'
+# model = 'ukv'
 
 run = '20160512T1200Z'
 
 # QH on the hour
 target_filetype = 'pexptb'
 
-variable_name = 'upward_air_velocity'
+# variable_name = 'upward_air_velocity'
+variable_name = 'upward_heat_flux_in_air'
 
 surface = True
 # surface = False
@@ -27,8 +28,6 @@ surface = True
 target_hour = 12
 
 save_path = os.getcwd().replace('\\', '/') + '/'
-
-
 
 # Model files
 # first ouput timestamp is 1300 on the day before (DOY 133). So add 11 hours to get to midnight of target day (134)
@@ -44,9 +43,6 @@ target_file_name = 'umnsaa_' + target_filetype + str(file_index_hour).zfill(3) +
 # construct total path and check the file exists
 target_file_path = netcdf_dir + target_file_name
 assert os.path.isfile(target_file_path)
-
-
-
 
 # read data
 nc_file = nc.Dataset(target_file_path)
@@ -107,24 +103,21 @@ if surface:
         assert variable_name == 'upward_air_velocity'
         variable_name = 'surface_W'
 
-plt.figure(figsize=(10,10))
-im = plt.imshow(QH_vals_constrained,
-                vmin=vmin, vmax=vmax,
-                cmap='jet', origin='lower')
+fig = plt.figure(figsize=(10, 10))
+ax = fig.add_subplot(111)
+im = ax.imshow(QH_vals_constrained,
+               vmin=vmin, vmax=vmax,
+               cmap='jet', origin='lower')
 
 plt.colorbar(im, fraction=0.046, pad=0.01)
 plt.xticks([])
 plt.yticks([])
 
-
-
-
 current_path = os.getcwd().replace('\\', '/') + '/plots/fields/'
 
-plt.savefig(current_path + '/' + model + '_' + variable_name + '_' + str(target_hour).zfill(2) + '.png', bbox_inches='tight',
+plt.savefig(current_path + '/' + model + '_' + variable_name + '_' + str(target_hour).zfill(2) + '.png',
+            bbox_inches='tight',
             dpi=300)
-
-
 
 # plt.show()
 
