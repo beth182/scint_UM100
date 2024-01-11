@@ -1,13 +1,10 @@
 # imports
-from os import listdir
-from os.path import isfile, join
 import os
 import iris
 import cartopy.crs as ccrs
 import netCDF4 as nc
 import matplotlib.pyplot as plt
 import numpy as np
-import datetime as dt
 import rasterio
 import geopandas as gpd
 import pandas as pd
@@ -31,7 +28,8 @@ target_filetype = 'pexptb'
 
 # variable_name = 'upward_heat_flux_in_air'
 # variable_name = 'air_temperature'
-variable_name = 'upward_air_velocity'
+# variable_name = 'upward_air_velocity'
+variable_name = 'cloud_volume_fraction_in_atmosphere_layer'
 
 colour_dict = {'BCT_IMU': 'red', 'SCT_SWT': 'mediumorchid', 'IMU_BTT': 'green', 'BTT_BCT': 'blue'}
 
@@ -92,15 +90,22 @@ QH = nc_file.variables[variable_name]
 # sa_files = sa_lines.find_SA_rasters(sa_dir)
 sa_file = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/PycharmProjects/scintillometer_footprints/scint_fp/test_outputs/10_mins_ending/2016134/BCT_IMU_15000_2016_134_12_00.tif'
 
-if surface:
-    model_level_ind = 0
-else:
-    if model == 'ukv':
-        model_level_ind = 3
-    else:
-        model_level_ind = 6
 
-QH_vals = QH[model_level_ind, :, :]
+if variable_name != 'cloud_volume_fraction_in_atmosphere_layer':
+    if surface:
+        model_level_ind = 0
+    else:
+        if model == 'ukv':
+            model_level_ind = 3
+        else:
+            model_level_ind = 6
+
+    QH_vals = QH[model_level_ind, :, :]
+
+else:
+    assert surface == False
+    QH_vals = np.sum(QH, axis=0)
+
 
 # handle SA
 raster = rasterio.open(sa_file)
@@ -118,47 +123,12 @@ bool_arr[nan_index] = 0.0
 
 path_here = sa_file.split('/')[-1].split('_')[0] + '_' + sa_file.split('/')[-1].split('_')[1]
 
-# handle model grids
-sa_grids_lookup_csv_ukv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/' + 'BCT_IMU' + '_SA_UM' + \
-                          'ukv' + '_grid_percentages.csv'
 
-assert os.path.isfile(sa_grids_lookup_csv_ukv)
 
-sa_grids_df_ukv = pd.read_csv(sa_grids_lookup_csv_ukv)
-sa_grids_df_ukv.index = sa_grids_df_ukv['Unnamed: 0']
-sa_grids_df_ukv = sa_grids_df_ukv.drop(columns=['Unnamed: 0'])
-sa_grids_df_ukv.index.name = 'grid'
-hour_grid_df_ukv = sa_grids_df_ukv[sa_grids_df_ukv[str(target_hour)] > threshold_value]
 
-target_grid_list_ukv = hour_grid_df_ukv.index.to_list()
 
-# handle model grids
-sa_grids_lookup_csv_300 = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/' + 'BCT_IMU' + '_SA_UM' + \
-                          '300' + '_grid_percentages.csv'
 
-assert os.path.isfile(sa_grids_lookup_csv_300)
 
-sa_grids_df_300 = pd.read_csv(sa_grids_lookup_csv_300)
-sa_grids_df_300.index = sa_grids_df_300['Unnamed: 0']
-sa_grids_df_300 = sa_grids_df_300.drop(columns=['Unnamed: 0'])
-sa_grids_df_300.index.name = 'grid'
-hour_grid_df_300 = sa_grids_df_300[sa_grids_df_300[str(target_hour)] > threshold_value]
-
-target_grid_list_300 = hour_grid_df_300.index.to_list()
-
-# handle model grids
-sa_grids_lookup_csv_100 = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/' + 'BCT_IMU' + '_SA_UM' + \
-                          '100' + '_grid_percentages.csv'
-
-assert os.path.isfile(sa_grids_lookup_csv_100)
-
-sa_grids_df_100 = pd.read_csv(sa_grids_lookup_csv_100)
-sa_grids_df_100.index = sa_grids_df_100['Unnamed: 0']
-sa_grids_df_100 = sa_grids_df_100.drop(columns=['Unnamed: 0'])
-sa_grids_df_100.index.name = 'grid'
-hour_grid_df_100 = sa_grids_df_100[sa_grids_df_100[str(target_hour)] > threshold_value]
-
-target_grid_list_100 = hour_grid_df_100.index.to_list()
 
 if variable_name == 'upward_heat_flux_in_air':
     vmin = -110
@@ -167,10 +137,14 @@ if variable_name == 'upward_heat_flux_in_air':
 elif variable_name == 'air_temperature':
     vmin = 287
     vmax = 295
-else:
-    assert variable_name == 'upward_air_velocity'
+elif variable_name == 'upward_air_velocity':
     vmin = -1.9
     vmax = 1.8
+
+else:
+    assert variable_name == 'cloud_volume_fraction_in_atmosphere_layer'
+    vmin = 0
+    vmax = 10
 
 if surface:
     if variable_name == 'upward_heat_flux_in_air':
@@ -199,10 +173,16 @@ plt.colorbar(im, fraction=0.046, pad=0.04)
 
 # plot paths
 df_path = gpd.read_file(scint_shp_dir + path_here + '.shp')
-df_path.plot(edgecolor='k', ax=ax, linewidth=3.0)
+
+if variable_name == 'cloud_volume_fraction_in_atmosphere_layer':
+    path_c = 'white'
+else:
+    path_c = 'black'
+
+df_path.plot(edgecolor=path_c, ax=ax, linewidth=3.0)
 
 rasterio.plot.show(bool_arr, contour=True, transform=raster.transform, contour_label_kws={}, ax=ax,
-                   colors='k', zorder=10)
+                   colors=path_c, zorder=10)
 
 current_path = os.getcwd().replace('\\', '/') + '/plots/fields/'
 
