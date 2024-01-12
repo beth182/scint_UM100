@@ -126,7 +126,7 @@ def save_model_stash_to_csv(model, target_hour, grid_nums, grid_vals_QH, grid_va
             print('end')
 
         # check if the stash code already exists
-        if np.isclose(df['upward_heat_flux_in_air'], existing_df['upward_heat_flux_in_air']).all():
+        if np.isclose(df['upward_heat_flux_in_air'].dropna(), existing_df['upward_heat_flux_in_air'].dropna()).all():
             pass
         else:
             print('end')

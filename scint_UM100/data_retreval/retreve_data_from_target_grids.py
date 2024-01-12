@@ -16,6 +16,8 @@ from scint_UM100.data_retreval import retrieve_data_funs
 from scint_UM100.data_retreval import QH_alpha_plot
 from scint_UM100.data_retreval.explicit_flux import csv_explicit_flux
 
+from scint_UM100.data_retreval.explicit_flux.explicit_flux_area_sensitivity import explicit_flux_profile_various_areas
+
 
 def grab_model_data(path, target_DOY, target_hour, model,
                     levels=True):
@@ -29,6 +31,9 @@ def grab_model_data(path, target_DOY, target_hour, model,
     :param levels:
     :return:
     """
+
+    # faff
+    ####################################################################################################################
 
     if target_DOY == 2016134:
         run = '20160512T1200Z'
@@ -44,6 +49,19 @@ def grab_model_data(path, target_DOY, target_hour, model,
     else:
         target_filetype = 'pvera'
 
+    save_path = os.getcwd().replace('\\', '/') + '/'
+
+
+
+
+
+
+
+
+
+
+
+
     csv_name = path + '_' + str(target_DOY)[-3:].zfill(3) + '_UM100_QH_' + model + '.csv'
     csv_path = os.getcwd().replace('\\', '/') + '/' + csv_name
 
@@ -51,6 +69,18 @@ def grab_model_data(path, target_DOY, target_hour, model,
     # z_f csvs are screated within scint_fp package
     z_f = retrieve_data_funs.grab_obs_z_f_vals(target_DOY, target_hour, path)
 
+
+
+
+
+
+
+
+
+
+
+    # find files
+    ####################################################################################################################
     # Model files
     # first ouput timestamp is 1300 on the day before (DOY 133). So add 11 hours to get to midnight of target day (134)
     file_index_hour = 11 + target_hour
@@ -74,9 +104,13 @@ def grab_model_data(path, target_DOY, target_hour, model,
     assert run_times[0].hour == target_hour
     assert run_times[0].strftime('%j') == str(target_DOY)[-3:]
 
+
+
+
+    # SA stuff FOR PARAMETERIZED FLUX
+    ####################################################################################################################
+
     # look up grids for this hour
-    # sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/SA_UM100_grid_percentages.csv'
-    # sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/' + path + '_SA_UM100_grid_percentages.csv'
     sa_grids_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/SA_grid_overlap/' + path + '_SA_UM' + \
                           model.split('m')[0] + '_grid_percentages.csv'
 
@@ -92,29 +126,51 @@ def grab_model_data(path, target_DOY, target_hour, model,
     else:
         hour_grid_df = sa_grids_df[sa_grids_df[str(target_hour).zfill(2)] > threshold_value]
 
-    target_grid_list = hour_grid_df.index.to_list()
+    target_grid_list_p = hour_grid_df.index.to_list()
 
     # look up the coords of these grids from the coord lookup
     coord_lookup_csv = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/grid_coord_lookup/grid_coords_' + model + '.csv'
 
     coord_lookup_df = pd.read_csv(coord_lookup_csv)
 
-    lf_df_list = []
+    lf_df_list_p = []
 
-    for target_grid in target_grid_list:
+    for target_grid in target_grid_list_p:
         print(target_grid)
 
         # subset the coord df for just the current grid
-        # grid_coords = coord_lookup_df[coord_lookup_df.grid == target_grid][coord_lookup_df.descrip == 'BL']
         grid_coords = coord_lookup_df[coord_lookup_df.grid == target_grid][coord_lookup_df.descrip == 'MID']
-        lf_df_list.append(grid_coords)
+        lf_df_list_p.append(grid_coords)
 
-    target_grid_coords = pd.concat(lf_df_list)
+    target_grid_coords_p = pd.concat(lf_df_list_p)
+    target_grid_coords_p = target_grid_coords_p.drop(columns=['Unnamed: 0'])
+
+    target_grid_coords_p.index = target_grid_coords_p.grid
+    target_grid_coords_p.index = target_grid_coords_p.index.astype(int)
+
+    # FOR EXPLICIT FLUX
+    ####################################################################################################################
+
+
+    target_grid_coords_e = explicit_flux_profile_various_areas.grab_explicit_flux_profile_grids(save_path + 'explicit_flux/explicit_flux_area_sensitivity/', model, 'ukv', target_hour, coord_lookup_df)
+    target_grid_coords_e = target_grid_coords_e.add_suffix('_e')
+
+
+
+
+    # COMBINE
+    ####################################################################################################################
+
+    target_grid_coords_all = target_grid_coords_e.join(target_grid_coords_p)
 
     # combine SA weight and coord df
-    target_grid_coords = target_grid_coords.join(sa_grids_df, on='grid')
+    target_grid_coords_all = target_grid_coords_all.join(sa_grids_df)
+
+
+
 
     # temp read in cube
+    ####################################################################################################################
     if model == 'ukv':
         pp_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/pp/20160512T1200Z/' + \
                        model.split('m')[0] + '/umnsaa_pexptb' + str(file_index_hour).zfill(3) + '.pp'
@@ -135,26 +191,35 @@ def grab_model_data(path, target_DOY, target_hour, model,
     inProj = Proj(init='epsg:32631')
     outProj = Proj(init='epsg:4326')
 
-    lat_inds = []
-    lon_inds = []
 
-    tuple_list = []
+
+
+
+
+
+    # find all lat/lons
+    ####################################################################################################################
+
+    lat_lon_tuples_e = []
+    lat_lon_tuples_p = []
+
+
 
     altitude_list = []
 
-    for index, row in target_grid_coords.iterrows():
+    for index, row in target_grid_coords_all.iterrows():
 
         print(index)
 
         # Look up the altitude
         if model != 'ukv':
-            altitude = retrieve_data_funs.grab_model_altitude(model, row.grid)
+            altitude = retrieve_data_funs.grab_model_altitude(model, row.grid_e)
         else:
             altitude = 0
 
         # get coord
-        x = row.x
-        y = row.y
+        x = row.x_e
+        y = row.y_e
 
         point = transform(inProj, outProj, x, y)
 
@@ -176,17 +241,13 @@ def grab_model_data(path, target_DOY, target_hour, model,
         if model == 'ukv':
             longitudes = longitudes - 360
 
-        # not fully understanding why +1's are needed here
-        # nearest_lat = latitudes.nearest_neighbour_index(y_new) + 1
-        # nearest_lon = longitudes.nearest_neighbour_index(x_new) + 1
-
         nearest_lat = latitudes.nearest_neighbour_index(y_new)
         nearest_lon = longitudes.nearest_neighbour_index(x_new)
 
         # temp solution here to tuple repeat issue
 
         coord_tuple = (nearest_lat, nearest_lon)
-        temp_tuple_list = tuple_list.copy()
+        temp_tuple_list = lat_lon_tuples_e.copy()
         temp_tuple_list.append(coord_tuple)
 
         # check for dups
@@ -197,7 +258,7 @@ def grab_model_data(path, target_DOY, target_hour, model,
 
                 new_coord_tuple = (nearest_lat, nearest_lon)
 
-                if new_coord_tuple in tuple_list:
+                if new_coord_tuple in lat_lon_tuples_e:
                     print('PROBLEM')
                 else:
                     coord_tuple = new_coord_tuple
@@ -207,30 +268,50 @@ def grab_model_data(path, target_DOY, target_hour, model,
 
         altitude_list.append(altitude)
 
-        lat_inds.append(nearest_lat)
-        lon_inds.append(nearest_lon)
+        lat_lon_tuples_e.append(coord_tuple)
 
-        tuple_list.append(coord_tuple)
 
-        # checks to see how close the converted coord back is to the orig x y in epsg 32631
-        """
-        lat_value = latitudes.cell(nearest_lat)
-        lon_value = longitudes.cell(nearest_lon)
-        real_world_xy = ll.transform_point(lon_value[0], lat_value[0], rot_pole)
-        coords = transform(outProj, inProj, real_world_xy[0], real_world_xy[1])
-        """
 
-    lat_lon_tuples = retrieve_data_funs.merge(lat_inds, lon_inds)
+        if not np.isnan(row.grid):
+            lat_lon_tuples_p.append(coord_tuple)
 
-    target_grid_coords['altitudes'] = altitude_list
-    target_grid_coords['lat_inds'] = lat_inds
-    target_grid_coords['lon_inds'] = lon_inds
-    target_grid_coords['ind_tuples'] = lat_lon_tuples
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    target_grid_coords_all['altitudes'] = altitude_list
+    target_grid_coords_all['ind_tuples'] = lat_lon_tuples_e
+
+
+
+
+
+
+
+
+    # build arrays
+    ########################################################################################################################
 
     QH_array = nc_file.variables['upward_heat_flux_in_air'][:]
     W_array = nc_file.variables['upward_air_velocity'][:]
     T_array = nc_file.variables['air_temperature'][:]
     rho_array = nc_file.variables['m01s00i253'][:]
+
+    # define level heights
+    # ToDo: this will break if Levels = False
+    model_level_heights = nc_file.variables['level_height'][:]
 
     if levels == True:
         i_ind = 1
@@ -252,9 +333,7 @@ def grab_model_data(path, target_DOY, target_hour, model,
         array_size_i = QH_array.shape[i_ind]
         array_size_j = QH_array.shape[i_ind]
 
-    # define level heights
-    # ToDo: this will break if Levels = False
-    model_level_heights = nc_file.variables['level_height'][:]
+
 
     # start with an array full of nans
     a = np.full((array_size_i, array_size_j), np.nan)
@@ -264,19 +343,21 @@ def grab_model_data(path, target_DOY, target_hour, model,
     grid_nums = []
     grid_levels = []
 
-    grid_vals_QH = []
-    grid_vals_W = []
-    grid_vals_T = []
-    grid_vals_rho = []
+    QH_grid_arrays_p = []
+
+    T_grid_arrays_e = []
+    W_grid_arrays_e = []
+    rho_grid_arrays_e = []
+
 
     # lats
     for i in range(0, array_size_i):
         # lons
         for j in range(0, array_size_j):
-            if (i, j) in lat_lon_tuples:
+            if (i, j) in lat_lon_tuples_e:
                 # match the model heights
                 # get altitude for this grid
-                grid_altitude = target_grid_coords.loc[target_grid_coords['ind_tuples'] == (i, j)].altitudes
+                grid_altitude = target_grid_coords_all.loc[target_grid_coords_all['ind_tuples'] == (i, j)].altitudes
                 model_heights = model_level_heights + float(grid_altitude)
 
                 if model != 'ukv':
@@ -284,22 +365,27 @@ def grab_model_data(path, target_DOY, target_hour, model,
                 else:
                     height_index = 3
 
-                a[i, j] = QH_array[height_index, i, j]
-
-                grid_nums.append(int(target_grid_coords.loc[target_grid_coords['ind_tuples'] == (i, j)].grid))
+                grid_nums.append(int(target_grid_coords_all.loc[target_grid_coords_all['ind_tuples'] == (i, j)].grid_e))
                 grid_levels.append(height_index)
 
-                grid_vals_QH.append(QH_array[height_index, i, j])
-                grid_vals_W.append(W_array[height_index, i, j])
-                grid_vals_T.append(T_array[height_index, i, j])
-                grid_vals_rho.append(rho_array[height_index, i, j])
+                T_grid_arrays_e.append(T_array[height_index, i, j])
+                W_grid_arrays_e.append(W_array[height_index, i, j])
+                rho_grid_arrays_e.append(rho_array[height_index, i, j])
 
-                if model == '100m':
-                    sa_val = float(target_grid_coords.loc[target_grid_coords['ind_tuples'] == (i, j)][str(target_hour)])
+
+                if (i, j) in lat_lon_tuples_p:
+                    QH_grid_arrays_p.append(QH_array[height_index, i, j])
+                    a[i, j] = QH_array[height_index, i, j]
+
+                    if model == '100m':
+                        sa_val = float(target_grid_coords_all.loc[target_grid_coords_all['ind_tuples'] == (i, j)][str(target_hour)])
+                    else:
+                        sa_val = float(target_grid_coords_all.loc[target_grid_coords_all['ind_tuples'] == (i, j)][str(target_hour).zfill(2)])
+
+                    sa_a[i, j] = sa_val
+
                 else:
-                    sa_val = float(target_grid_coords.loc[target_grid_coords['ind_tuples'] == (i, j)][str(target_hour).zfill(2)])
-
-                sa_a[i, j] = sa_val
+                    QH_grid_arrays_p.append(np.nan)
 
     if np.nansum(sa_a) > 99.99:
         pass
@@ -307,8 +393,16 @@ def grab_model_data(path, target_DOY, target_hour, model,
         print('end')
 
     # save to a CSV here!
-    retrieve_data_funs.save_model_stash_to_csv(model, target_hour, grid_nums, grid_vals_QH, grid_vals_W,
-                                               grid_vals_T, grid_vals_rho, grid_levels)
+    retrieve_data_funs.save_model_stash_to_csv(model, target_hour, grid_nums, QH_grid_arrays_p, W_grid_arrays_e, T_grid_arrays_e, rho_grid_arrays_e, grid_levels)
+
+
+
+
+
+
+
+
+
 
     # read the explicit flux
     explicit_dir = 'D:/Documents/scint_UM100/scint_UM100/data_retreval/stash_data/'
@@ -325,8 +419,8 @@ def grab_model_data(path, target_DOY, target_hour, model,
     explicit_flux = explicit_df.total_flux - explicit_df.upward_heat_flux_in_air
 
     # make sure they're all the same val
-    assert np.isclose(explicit_flux[0], explicit_flux).all()
-    explicit_val = explicit_flux[0]
+    assert np.isclose(explicit_flux.dropna().iloc[0], explicit_flux.dropna()).all()
+    explicit_val = explicit_flux.dropna().iloc[0]
 
     total_flux_a = a + explicit_val
     weighted_a = (sa_a / np.nansum(sa_a)) * total_flux_a
@@ -336,7 +430,7 @@ def grab_model_data(path, target_DOY, target_hour, model,
     # create or write to csv file of weighted average values
     out_df = pd.DataFrame(
         {'hour': [target_hour], 'weighted_av_a': [weighted_av_a],
-         'av_a': [np.nanmean(total_flux_a)], 'len_grids': [len(target_grid_list)], 'explicit': [explicit_val]})
+         'av_a': [np.nanmean(total_flux_a)], 'len_grids': [len(target_grid_list_p)], 'explicit': [explicit_val]})
 
     out_df.index = out_df.hour
     out_df = out_df.drop(columns=['hour'])
@@ -356,7 +450,7 @@ def grab_model_data(path, target_DOY, target_hour, model,
         out_df.to_csv(csv_path)
 
     # alpha plot
-    QH_alpha_plot.QH_alpha_plot(target_hour, model, path, target_grid_coords, target_grid_list, cube, sa_a,
+    QH_alpha_plot.QH_alpha_plot(target_hour, model, path, target_grid_coords_all, target_grid_list_p, cube, sa_a,
                                 total_flux_a,
                                 weighted_av_a)
 
