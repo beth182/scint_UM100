@@ -151,8 +151,12 @@ def grab_model_data(path, target_DOY, target_hour, model,
     # FOR EXPLICIT FLUX
     ####################################################################################################################
 
+    if model == 'ukv':
+        target_grid_coords_e = target_grid_coords_p.copy()
 
-    target_grid_coords_e = explicit_flux_profile_various_areas.grab_explicit_flux_profile_grids(save_path + 'explicit_flux/explicit_flux_area_sensitivity/', model, 'ukv', target_hour, coord_lookup_df)
+    else:
+        target_grid_coords_e = explicit_flux_profile_various_areas.grab_explicit_flux_profile_grids(save_path + 'explicit_flux/explicit_flux_area_sensitivity/', model, 'ukv', target_hour, coord_lookup_df)
+
     target_grid_coords_e = target_grid_coords_e.add_suffix('_e')
 
 
