@@ -57,7 +57,7 @@ def QH_alpha_plot(target_hour, model, path, target_grid_coords, target_grid_list
     # plot the grid boundry box polygons
     grid_dir = 'D:/Documents/scint_UM100/scint_UM100/grid_coords/grid_coord_lookup/grid_polygons/UM' + model.split('m')[
         0] + '_shapes/'
-    for grid in target_grid_coords.dropna().grid.to_list():
+    for grid in target_grid_coords.grid.dropna().to_list():
         grid = int(grid)
         grid_file_path = grid_dir + str(grid) + '.gpkg'
 
