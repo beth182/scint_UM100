@@ -158,70 +158,68 @@ if __name__ == '__main__':
     my_pal = {"lake": "blue", "canyon": "grey", "roof": "black", "soil": "brown", "needleleaf": "olive",
               "broadleaf": "forestgreen", 'C3': 'orange'}
 
-    fig, ax = plt.subplots(figsize=(9, 10))
+    fig, axs = plt.subplots(1, len(sorted(set(ye.hour))), figsize=(15,7))
+    fig.subplots_adjust(hspace=0, wspace=0)
 
-    # Create the boxplot using Seaborn
-    seaborn.boxplot(
-        x="hour",
-        y="vals",
-        hue="type",
-        data=ye,
-        width=1,
-        whis=[0, 100],
-        palette=my_pal,
-        ax=ax)
+    axs = axs.ravel()
 
-    box_container = ax.patches if len(ax.patches) > 0 else ax.artists
+    for ind, hour in enumerate(sorted(set(ye.hour))):
 
-    lines_per_boxplot = len(ax.lines) // len(box_container)
+        data = ye[ye.hour == hour]
 
+        # fig, ax = plt.subplots(figsize=(2, 10))
 
-    # Yield successive n-sized
-    # chunks from l.
-    def divide_chunks(l, n):
-        # looping till length l
-        for i in range(0, len(l), n):
-            yield l[i:i + n]
+        data['c'] = [my_pal[key] for key in data.type]
 
+        # Create the boxplot using Seaborn
+        seaborn.boxplot(
+            x="type",
+            y="vals",
+            hue="type",
+            data=data,
+            width=1,
+            whis=[0, 100],
+            palette=my_pal,
+            ax=axs[ind])
 
-    # list should have
-    n = 7
-    x = list(divide_chunks(list(np.arange(0, 98)), n))
+        axs[ind].set(xlabel=str(dt.datetime.strptime(hour, '%y%m%d%H').hour))
+        axs[ind].set(xticklabels=[])
 
+        box_container = axs[ind].patches if len(axs[ind].patches) > 0 else axs[ind].artists
 
-    collections = []
+        for i, artist in enumerate(box_container):
 
-    for i in range(0, len(x[0])):
-        collection = []
-        for list in x:
-            collection.append(list[i])
-        collections.append(collection)
+            col = artist.get_facecolor()
 
+            artist.set_edgecolor(col)
+            artist.set_facecolor('None')
 
+            # Each box has 6 associated Line2D objects (to make the whiskers, fliers, etc.)
+            # Loop over them here, and use the same colour as above
+            for j in range(i * 6, i * 6 + 6):
+                line = axs[ind].lines[j]
+                line.set_color(col)
+                line.set_mfc(col)
+                line.set_mec(col)
 
+        print('end')
 
+        if ind != 0:
+            axs[ind].set(yticks=[])
+            axs[ind].set(yticklabels=[])
+            axs[ind].set(ylabel='')
 
+        else:
+            axs[ind].set(ylabel='Weighted Land Cover Fraction')
 
-    for i, box in enumerate(box_container):
-
-
-        assert len([element for element in collections if i in element]) == 1
-        group = [element for element in collections if i in element][0][0]
-        type = sorted(non_zero_types)[group]
-        col = my_pal[type]
-
-        # number of hours = len(set(ye.hour))
-
-        # Each box has 6 associated Line2D objects (to make the whiskers, fliers, etc.)
-        # Loop over them here, and use the same colour as above
-        for j in range(group * len(set(ye.hour)) * 6, group * len(set(ye.hour)) * 6 + len(set(ye.hour)) * 6):
-            line = ax.lines[j]
-            line.set_color(col)
-            line.set_mfc(col)
-            line.set_mec(col)
+        if ind == len(sorted(set(ye.hour))) - 1:
+            # The following two lines generate custom fake lines that will be used as legend entries:
+            markers = [plt.Line2D([0, 0], [0, 0], color=color, marker='o', linestyle='') for color in my_pal.values()]
+            axs[ind].legend(markers, my_pal.keys(), numpoints=1, loc='center left', bbox_to_anchor=(1, 0.5))
 
 
+    save_path = os.getcwd().replace('\\', '/') + '/'
 
+    plt.savefig(save_path + 'UM100_LC_fraction.png', bbox_inches='tight', dpi=300)
 
-    # plt.show()
     print('end')
