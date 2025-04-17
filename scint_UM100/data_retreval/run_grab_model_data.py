@@ -16,24 +16,24 @@ def run_all_grab(path, target_DOY, target_hours, model):
 
     for target_hour in target_hours:
 
-        # only run for hours that need it
-        csv_name = path + '_' + str(target_DOY)[-3:].zfill(3) + '_UM100_QH_' + model + '.csv'
-        csv_path = os.getcwd().replace('\\', '/') + '/' + csv_name
-
-        # check to see if the index exists
-        if os.path.isfile(csv_path):
-            existing_df = pd.read_csv(csv_path)
-            existing_df.index = existing_df.hour
-            existing_df = existing_df.drop(columns=['hour'])
-            if target_hour in existing_df.index:
-                print('Already done ', str(target_hour))
-                print(' ')
-
-                continue
-            else:
-                pass
-        else:
-            pass
+        # # only run for hours that need it
+        # csv_name = path + '_' + str(target_DOY)[-3:].zfill(3) + '_UM100_QH_' + model + '.csv'
+        # csv_path = os.getcwd().replace('\\', '/') + '/' + csv_name
+        #
+        # # check to see if the index exists
+        # if os.path.isfile(csv_path):
+        #     existing_df = pd.read_csv(csv_path)
+        #     existing_df.index = existing_df.hour
+        #     existing_df = existing_df.drop(columns=['hour'])
+        #     if target_hour in existing_df.index:
+        #         print('Already done ', str(target_hour))
+        #         print(' ')
+        #
+        #         continue
+        #     else:
+        #         pass
+        # else:
+        #     pass
 
         # if hour doesnt already exist:
         retreve_data_from_target_grids.grab_model_data(path, target_DOY, target_hour, model)

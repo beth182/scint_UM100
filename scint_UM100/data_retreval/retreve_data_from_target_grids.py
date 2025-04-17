@@ -86,7 +86,7 @@ def grab_model_data(path, target_DOY, target_hour, model,
     file_index_hour = 11 + target_hour
 
     # find model file
-    main_dir = "//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/"
+    main_dir = "//rdg-home.ad.rdg.ac.uk/research-nfs/rds/micromet/Tier_processing/rv006011/UM100/"
     netcdf_dir = main_dir + 'netcdf/' + run + '/' + model + '/'
 
     # construct file name
@@ -176,10 +176,10 @@ def grab_model_data(path, target_DOY, target_hour, model,
     # temp read in cube
     ####################################################################################################################
     if model == 'ukv':
-        pp_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/pp/20160512T1200Z/' + \
+        pp_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/rds/micromet/Tier_processing/rv006011/UM100/pp/20160512T1200Z/' + \
                        model.split('m')[0] + '/umnsaa_pexptb' + str(file_index_hour).zfill(3) + '.pp'
     else:
-        pp_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/basic/micromet/Tier_processing/rv006011/UM100/pp/20160512T1200Z/' + \
+        pp_file_path = '//rdg-home.ad.rdg.ac.uk/research-nfs/rds/micromet/Tier_processing/rv006011/UM100/pp/20160512T1200Z/' + \
                        model.split('m')[0] + 'm/umnsaa_pexptb' + str(file_index_hour).zfill(3) +'.pp'
 
     assert os.path.isfile(pp_file_path)
